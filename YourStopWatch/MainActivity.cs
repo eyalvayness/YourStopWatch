@@ -96,6 +96,7 @@ namespace YourStopWatch
 
         private void UpdateClock()
         {
+            canv.DrawColor(Color.Transparent, PorterDuff.Mode.Clear);
             canv.DrawArc(secOffset, secOffset, 500 - secOffset, 500 - secOffset, -90, (sec + hun / 100f)*6, true, secPaint);
             canv.DrawArc(minOffset, minOffset, 500 - minOffset, 500 - minOffset, -90, (min + sec / 60f)*6, true, minPaint);
             canv.DrawArc(hourOffset, hourOffset, 500 - hourOffset, 500 - hourOffset, -90, (hour + min / 60f)*15, true, hourPaint);
