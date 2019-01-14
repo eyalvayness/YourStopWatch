@@ -5,44 +5,63 @@
     android:id="@+id/container"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
-	<LinearLayout
-		android:id="@+id/linearLayout"
-		android:orientation="vertical"
+	
+	<ImageView
+		android:src="@android:drawable/ic_menu_gallery"
 		android:layout_width="match_parent"
-		android:layout_height="match_parent"
+		android:layout_height="wrap_content"
+		android:id="@+id/imgView"
+		android:padding="10px"/>
+	
+	<TextView
+		android:id="@+id/timerView"
+		android:layout_below="@id/imgView"
+		android:layout_gravity="center_horizontal"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:text="0:0:0:0"
+		android:textAlignment="center"
+		android:textAppearance="?android:attr/textAppearanceLarge"/>
+
+	<GridLayout
+		android:id="@+id/buttonLayout"
+		android:layout_below="@id/timerView"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:rowCount="2"
+		android:columnCount="2"
 		android:minWidth="25px"
 		android:minHeight="25px">
-		<ImageView
-			android:src="@android:drawable/ic_menu_gallery"
-			android:layout_width="match_parent"
-			android:layout_height="wrap_content"
-			android:id="@+id/imgView"
-			android:padding="10px"/>
+
 		<Button
 			android:id="@+id/startButton"
-			android:layout_gravity="center_horizontal"
-			android:layout_width="match_parent"
+			android:layout_columnWeight="1"
+			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:text="start"/>
+
+		<Button
+			android:id="@+id/pauseButton"
+			android:layout_columnWeight="1"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="pause"/>
+		
+		<Button
+			android:id="@+id/cancelButton"
+			android:layout_columnWeight="1"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="cancel"/>
+
 		<Button
 			android:id="@+id/stopButton"
-			android:layout_gravity="center_horizontal"
-			android:layout_width="match_parent"
+			android:layout_columnWeight="1"
+			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:text="stop"/>
-		<TextView
-			android:id="@+id/timerView"
-			android:layout_gravity="center_horizontal"
-			android:layout_width="match_parent"
-			android:layout_height="wrap_content"
-			android:layout_centerInParent="true"
-			android:layout_marginLeft="@dimen/activity_horizontal_margin"
-			android:layout_marginStart="@dimen/activity_horizontal_margin"
-			android:layout_marginTop="@dimen/activity_vertical_margin"
-			android:text="0:0:0:0"
-			android:textAlignment="center"
-			android:textAppearance="?android:attr/textAppearanceLarge"/>
-	</LinearLayout>
+
+	</GridLayout>
     
 	<android.support.design.widget.BottomNavigationView
         android:id="@+id/navigation"

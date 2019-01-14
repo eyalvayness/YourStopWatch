@@ -9,6 +9,7 @@ using Android.Widget;
 using System.Timers;
 using Android.Graphics.Drawables.Shapes;
 using Android.Graphics.Drawables;
+using System;
 
 namespace YourStopWatch
 {
@@ -19,12 +20,14 @@ namespace YourStopWatch
         ImageView imgView;
         Bitmap bmp;
         Canvas canv;
-        Paint background, secPaint, minPaint, hourPaint;
+        Paint contour, background, secPaint, minPaint, hourPaint;
         Timer timer;
         TextView timerView;
-        Button startButton, stopButton;
+        Button startButton, stopButton, pauseButton, cancelButton;
+        Time savedTime;
         int hun = 0, sec = 0, min = 0, hour = 0;
-        float secOffset = 0, minOffset = 25, hourOffset = 50;
+        const int maxSec = 60, maxMin = 60, maxHour = 6, bitmapLength = 500;
+        const float secOffset = 100, minOffset = 50, hourOffset = 0;
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
@@ -33,38 +36,34 @@ namespace YourStopWatch
 
             startButton = FindViewById<Button>(Resource.Id.startButton);
             stopButton = FindViewById<Button>(Resource.Id.stopButton);
+            pauseButton = FindViewById<Button>(Resource.Id.pauseButton);
+            cancelButton = FindViewById<Button>(Resource.Id.cancelButton);
+
             timerView = FindViewById<TextView>(Resource.Id.timerView);
             imgView = FindViewById<ImageView>(Resource.Id.imgView);
 
-            bmp = Bitmap.CreateBitmap(500, 500, Bitmap.Config.Argb8888);
+            bmp = Bitmap.CreateBitmap(bitmapLength, bitmapLength, Bitmap.Config.Argb8888);
             canv = new Canvas(bmp);
 
-            background = new Paint
-            {
-                Color = Color.White
-            };
-            secPaint = new Paint
-            {
-                Color = Color.Pink,
-                               
-            };
-            minPaint = new Paint
-            {
-                Color = Color.MediumBlue,
+            contour = new Paint();
+            background = new Paint();
+            secPaint = new Paint();
+            minPaint = new Paint();
+            hourPaint = new Paint();
 
-            };
-            hourPaint = new Paint
-            {
-                Color = Color.OrangeRed,
+            contour.Color = Color.Black;
+            contour.SetStyle(Paint.Style.Stroke);
+            background.Color = Color.White;
+            secPaint.Color = Color.Pink;
+            minPaint.Color = Color.MediumBlue;
+            hourPaint.Color = Color.OrangeRed;
 
-            };
             canv.DrawBitmap(bmp, 0, 0, background);
             UpdateClock();
-            BottomNavigationView navigation = FindViewById<BottomNavigationView>(Resource.Id.navigation);
-            navigation.SetOnNavigationItemSelectedListener(this);
 
-            startButton.Click += delegate 
+            startButton.Click += delegate
             {
+                ToggleButtonStartTimer();
                 RestartClock();
                 timer = new Timer
                 {
@@ -74,19 +73,51 @@ namespace YourStopWatch
                 timer.Start();
             };
 
+            pauseButton.Click += delegate
+            {
+                if (pauseButton.Text == "pause")
+                {
+                    ToggleButtonPauseTimer();
+                    timer.Stop();
+                    pauseButton.Text = "continue";
+                }
+                else if (pauseButton.Text == "continue")
+                {
+                    ToggleButtonStartTimer();
+                    timer.Start();
+                    pauseButton.Text = "pause";
+                }
+            };
+
             stopButton.Click += delegate
             {
-                if (timer == null)
-                    return;
-                hour = 0;
-                min = 0;
-                sec = 0;
-                hun = 0;
-                timer.Dispose();
-                timer = null;
+                ToggleButtonEndTimer();
+                savedTime = new Time(ExtractTimerSpan());
+
             };
+
+            ToggleButtonEndTimer();
+
+            BottomNavigationView navigation = FindViewById<BottomNavigationView>(Resource.Id.navigation);
+            navigation.SetOnNavigationItemSelectedListener(this);
         }
-        
+
+        private DateTime ExtractTimerSpan()
+        {
+            DateTime time = new DateTime();
+            time.AddMilliseconds(hun * 10);
+            time.AddSeconds(sec);
+            time.AddMinutes(min);
+            time.AddHours(hour);
+            hour = 0;
+            min = 0;
+            sec = 0;
+            hun = 0;
+            timer.Dispose();
+            timer = null;
+            return time;
+        }
+
         private void RestartClock()
         {
             timerView.Text = "0:0:0:0";
@@ -94,12 +125,37 @@ namespace YourStopWatch
             imgView.SetImageBitmap(bmp);
         }
 
+        private void ToggleButtonStartTimer()
+        {
+            startButton.Enabled = false;
+            pauseButton.Enabled = true;
+            cancelButton.Enabled = true;
+            stopButton.Enabled = true;
+        }
+
+        private void ToggleButtonPauseTimer()
+        {
+            startButton.Enabled = false;
+            pauseButton.Enabled = true;
+            cancelButton.Enabled = false;
+            stopButton.Enabled = false;
+        }
+
+        private void ToggleButtonEndTimer()
+        {
+            startButton.Enabled = true;
+            pauseButton.Enabled = false;
+            cancelButton.Enabled = false;
+            stopButton.Enabled = false;
+        }
+
         private void UpdateClock()
         {
             canv.DrawColor(Color.Transparent, PorterDuff.Mode.Clear);
-            canv.DrawArc(secOffset, secOffset, 500 - secOffset, 500 - secOffset, -90, (sec + hun / 100f)*6, true, secPaint);
-            canv.DrawArc(minOffset, minOffset, 500 - minOffset, 500 - minOffset, -90, (min + sec / 60f)*6, true, minPaint);
-            canv.DrawArc(hourOffset, hourOffset, 500 - hourOffset, 500 - hourOffset, -90, (hour + min / 60f)*15, true, hourPaint);
+            canv.DrawArc(secOffset, secOffset, bitmapLength - secOffset, bitmapLength - secOffset, -90, (sec + hun / 100f) * 360f / maxSec, true, secPaint);
+            canv.DrawArc(minOffset, minOffset, bitmapLength - minOffset, bitmapLength - minOffset, -90, (min + sec / 60f) * 360f / maxMin, true, minPaint);
+            canv.DrawArc(hourOffset, hourOffset, bitmapLength - hourOffset, bitmapLength - hourOffset, -90, (hour + min / 60f) * 360f / maxHour, true, hourPaint);
+            canv.DrawCircle(bitmapLength / 2f, bitmapLength / 2f, bitmapLength / 2f, contour);
             imgView.SetImageBitmap(bmp);
         }
 
@@ -143,6 +199,41 @@ namespace YourStopWatch
                     return true;
             }
             return false;
+        }
+    }
+
+    public class Time
+    {
+        private int year;
+        private int month;
+        private int day;
+        private int hour;
+        private int min;
+        private int sec;
+        
+        public Time(int year, int month, int day, int hour, int min, int sec)
+        {
+            this.year = year;
+            this.month = month;
+            this.day = day;
+            this.hour = hour;
+            this.min = min;
+            this.sec = sec;
+        }
+
+        public Time(DateTime time)
+        {
+            this.year = time.Year;
+            this.month = time.Month;
+            this.day = time.Day;
+            this.hour = time.Hour;
+            this.min = time.Minute;
+            this.sec = time.Millisecond / 10;
+        }
+
+        public override string ToString()
+        {
+            return $"{this.hour}:{this.min}:{this.min}";
         }
     }
 }
