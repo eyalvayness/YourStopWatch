@@ -10,22 +10,31 @@ using System.Timers;
 using Android.Graphics.Drawables.Shapes;
 using Android.Graphics.Drawables;
 using System;
+using SQLite;
+using System.ComponentModel;
+using Android.Content;
+using Android.Animation;
+using Android.Views.Animations;
 
 namespace YourStopWatch
 {
     [Activity(Label = "@string/app_name", Theme = "@style/AppTheme", MainLauncher = true)]
-    public class MainActivity : AppCompatActivity, BottomNavigationView.IOnNavigationItemSelectedListener
+    public class MainActivity : Android.Support.V7.App.AppCompatActivity, BottomNavigationView.IOnNavigationItemSelectedListener
     {
-        TextView textMessage;
+        View addedView;
+        BottomNavigationView navigation;
         ImageView imgView;
         Bitmap bmp;
         Canvas canv;
+        RelativeLayout container;
         Paint contour, background, secPaint, minPaint, hourPaint;
         Timer timer;
         TextView timerView;
-        Button startButton, stopButton, pauseButton, cancelButton;
-        Time savedTime;
-        int hun = 0, sec = 0, min = 0, hour = 0;
+        Button startButton, stopButton, pauseButton, cancelButton, resetButton;
+        readonly string dbFolder = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal);
+        const string dbName = "SavedTimesDataBase.db3";
+        int milli = 0, sec = 0, min = 0, hour = 0;
+        bool isTimerPaused = false;
         const int maxSec = 60, maxMin = 60, maxHour = 6, bitmapLength = 500;
         const float secOffset = 100, minOffset = 50, hourOffset = 0;
 
@@ -34,10 +43,34 @@ namespace YourStopWatch
             base.OnCreate(savedInstanceState);
             SetContentView(Resource.Layout.activity_main);
 
+            container = FindViewById<RelativeLayout>(Resource.Id.container);
+            LayoutTransition trans = new LayoutTransition();
+            container.LayoutTransition = trans;
+            MainPageSetup();
+
+            ToggleButtonsEndTimer();
+
+            navigation = FindViewById<BottomNavigationView>(Resource.Id.navigation);
+            navigation.SetOnNavigationItemSelectedListener(this);
+        }
+
+        private void CommonPageSetup(int pageId)
+        {
+            container.RemoveView(addedView);
+
+            LayoutInflater inflater = (LayoutInflater)BaseContext.GetSystemService(Context.LayoutInflaterService);
+            addedView = inflater.Inflate(pageId, null);
+            container.AddView(addedView);
+        }
+
+        private void MainPageSetup()
+        {
+            CommonPageSetup(Resource.Layout.home_page);
             startButton = FindViewById<Button>(Resource.Id.startButton);
             stopButton = FindViewById<Button>(Resource.Id.stopButton);
             pauseButton = FindViewById<Button>(Resource.Id.pauseButton);
             cancelButton = FindViewById<Button>(Resource.Id.cancelButton);
+            resetButton = FindViewById<Button>(Resource.Id.resetButton);
 
             timerView = FindViewById<TextView>(Resource.Id.timerView);
             imgView = FindViewById<ImageView>(Resource.Id.imgView);
@@ -60,11 +93,36 @@ namespace YourStopWatch
 
             canv.DrawBitmap(bmp, 0, 0, background);
             UpdateClock();
+            SetButtonsListeners();
+            if (timer == null)
+                ToggleButtonsEndTimer();
+            else if (isTimerPaused)
+            {
+                pauseButton.Text = "continue";
+                ToggleButtonsPauseTimer();
+            }
+            else
+                ToggleButtonsStartTimer();
+        }
+
+        private void DashboarPageSetup()
+        {
+            CommonPageSetup(Resource.Layout.dashboard_page);
+        }
+
+        private void SetButtonsListeners()
+        {
+            resetButton.Click += delegate
+            {
+                var db = new SQLiteConnection(System.IO.Path.Combine(dbFolder, dbName));
+                db.CreateTable<Time>();
+                db.DropTable<Time>();
+            };
 
             startButton.Click += delegate
             {
-                ToggleButtonStartTimer();
-                RestartClock();
+                ToggleButtonsStartTimer();
+                UpdateClock();
                 timer = new Timer
                 {
                     Interval = 10
@@ -75,57 +133,68 @@ namespace YourStopWatch
 
             pauseButton.Click += delegate
             {
-                if (pauseButton.Text == "pause")
+                if (!isTimerPaused)
                 {
-                    ToggleButtonPauseTimer();
+                    isTimerPaused = true;
+                    ToggleButtonsPauseTimer();
                     timer.Stop();
                     pauseButton.Text = "continue";
                 }
-                else if (pauseButton.Text == "continue")
+                else if (isTimerPaused)
                 {
-                    ToggleButtonStartTimer();
+                    isTimerPaused = false;
+                    ToggleButtonsStartTimer();
                     timer.Start();
                     pauseButton.Text = "pause";
                 }
             };
 
-            stopButton.Click += delegate
+            cancelButton.Click += delegate
             {
-                ToggleButtonEndTimer();
-                savedTime = new Time(ExtractTimerSpan());
-
+                ToggleButtonsEndTimer();
+                ExtractTimerSpan();
+                UpdateClock();
             };
 
-            ToggleButtonEndTimer();
+            stopButton.Click += delegate
+            {
+                ToggleButtonsEndTimer();
+                Time savedTime = new Time
+                {
+                    TimeSaved = ExtractTimerSpan()
+                };
 
-            BottomNavigationView navigation = FindViewById<BottomNavigationView>(Resource.Id.navigation);
-            navigation.SetOnNavigationItemSelectedListener(this);
+                var db = new SQLiteConnection(System.IO.Path.Combine(dbFolder, dbName));
+                db.CreateTable<Time>();
+                if (db.Table<Time>().Count() == 0)
+                    Console.WriteLine(string.Format("{0} is empty", dbName));
+                db.Insert(savedTime);
+
+                var table = db.Table<Time>();
+                string toDisplay = "----------------------" + "\n";
+                foreach (var t in table)
+                {
+                    toDisplay += string.Format("{0} : {1} {2}\n", t.Id, t.TimeSaved.ToLongDateString(), t.TimeSaved.ToLongTimeString());
+                }
+                Console.WriteLine(toDisplay + "-----------------------");
+                UpdateClock();
+            };
         }
 
         private DateTime ExtractTimerSpan()
         {
-            DateTime time = new DateTime();
-            time.AddMilliseconds(hun * 10);
-            time.AddSeconds(sec);
-            time.AddMinutes(min);
-            time.AddHours(hour);
+            DateTime time = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, hour, min, sec, milli);
             hour = 0;
             min = 0;
             sec = 0;
-            hun = 0;
+            milli = 0;
+            UpdateClock();
             timer.Dispose();
             timer = null;
             return time;
         }
 
-        private void RestartClock()
-        {
-            timerView.Text = "0:0:0:0";
-            canv.DrawColor(Color.Transparent, PorterDuff.Mode.Clear);
-            imgView.SetImageBitmap(bmp);
-        }
-
-        private void ToggleButtonStartTimer()
+        private void ToggleButtonsStartTimer()
         {
             startButton.Enabled = false;
             pauseButton.Enabled = true;
@@ -133,7 +202,7 @@ namespace YourStopWatch
             stopButton.Enabled = true;
         }
 
-        private void ToggleButtonPauseTimer()
+        private void ToggleButtonsPauseTimer()
         {
             startButton.Enabled = false;
             pauseButton.Enabled = true;
@@ -141,7 +210,7 @@ namespace YourStopWatch
             stopButton.Enabled = false;
         }
 
-        private void ToggleButtonEndTimer()
+        private void ToggleButtonsEndTimer()
         {
             startButton.Enabled = true;
             pauseButton.Enabled = false;
@@ -151,20 +220,21 @@ namespace YourStopWatch
 
         private void UpdateClock()
         {
+            timerView.Text = $"{hour}:{min}:{sec}:{milli/10}";
             canv.DrawColor(Color.Transparent, PorterDuff.Mode.Clear);
-            canv.DrawArc(secOffset, secOffset, bitmapLength - secOffset, bitmapLength - secOffset, -90, (sec + hun / 100f) * 360f / maxSec, true, secPaint);
-            canv.DrawArc(minOffset, minOffset, bitmapLength - minOffset, bitmapLength - minOffset, -90, (min + sec / 60f) * 360f / maxMin, true, minPaint);
             canv.DrawArc(hourOffset, hourOffset, bitmapLength - hourOffset, bitmapLength - hourOffset, -90, (hour + min / 60f) * 360f / maxHour, true, hourPaint);
+            canv.DrawArc(minOffset, minOffset, bitmapLength - minOffset, bitmapLength - minOffset, -90, (min + sec / 60f) * 360f / maxMin, true, minPaint);
+            canv.DrawArc(secOffset, secOffset, bitmapLength - secOffset, bitmapLength - secOffset, -90, (sec + milli / 1000f) * 360f / maxSec, true, secPaint);
             canv.DrawCircle(bitmapLength / 2f, bitmapLength / 2f, bitmapLength / 2f, contour);
             imgView.SetImageBitmap(bmp);
         }
 
         private void Timer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            hun++;
-            if (hun == 100)
+            milli += 10;
+            if (milli == 1000)
             {
-                hun = 0;
+                milli = 0;
                 sec++;
                 if (sec == 60)
                 {
@@ -177,63 +247,51 @@ namespace YourStopWatch
                     }
                 }
             }
-            RunOnUiThread(() => 
-            {
-                timerView.Text = $"{hour}:{min}:{sec}:{hun}";
-                UpdateClock();
-            });
+            RunOnUiThread(() => { UpdateClock(); });
         }
 
         public bool OnNavigationItemSelected(IMenuItem item)
         {
+            if (navigation.SelectedItemId == item.ItemId)
+                return false;
+
             switch (item.ItemId)
             {
                 case Resource.Id.navigation_home:
-                    textMessage.SetText(Resource.String.title_home);
+                    MainPageSetup();
                     return true;
                 case Resource.Id.navigation_dashboard:
-                    textMessage.SetText(Resource.String.title_dashboard);
+                    DashboarPageSetup();
                     return true;
                 case Resource.Id.navigation_notifications:
-                    textMessage.SetText(Resource.String.title_notifications);
                     return true;
             }
             return false;
         }
     }
-
-    public class Time
+    [Table("Times")]
+    public class Time : INotifyPropertyChanged
     {
-        private int year;
-        private int month;
-        private int day;
-        private int hour;
-        private int min;
-        private int sec;
-        
-        public Time(int year, int month, int day, int hour, int min, int sec)
+        private int _id;
+        [PrimaryKey, AutoIncrement]
+        public int Id
         {
-            this.year = year;
-            this.month = month;
-            this.day = day;
-            this.hour = hour;
-            this.min = min;
-            this.sec = sec;
+            get { return _id; }
+            set { this._id = value; OnPropertyChanged(nameof(Id)); }
         }
 
-        public Time(DateTime time)
+        private DateTime _timeSaved;
+        [NotNull]
+        public DateTime TimeSaved
         {
-            this.year = time.Year;
-            this.month = time.Month;
-            this.day = time.Day;
-            this.hour = time.Hour;
-            this.min = time.Minute;
-            this.sec = time.Millisecond / 10;
+            get { return _timeSaved; }
+            set { this._timeSaved = value; OnPropertyChanged(nameof(_timeSaved)); }
         }
 
-        public override string ToString()
+        public event PropertyChangedEventHandler PropertyChanged;
+        private void OnPropertyChanged(string propertyName)
         {
-            return $"{this.hour}:{this.min}:{this.min}";
+            this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }
