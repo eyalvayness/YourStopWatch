@@ -31,7 +31,7 @@ namespace YourStopWatch
         Timer timer;
         View addedView = null;
         TextView timerView;
-        Button startButton, stopButton, pauseButton, cancelButton, resetButton;
+        Button startButton, stopButton, pauseButton, resetButton;
         readonly string dbFolder = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal);
         const string dbName = "SavedTimesDataBase.db3", settingsName = "AppSettings";
         int milli = 0, sec = 0, min = 0, hour = 0, maxHour = 6, bitmapLength = 500;
@@ -62,33 +62,27 @@ namespace YourStopWatch
             base.OnRestart();
 
             if (timer != null && timer.Enabled)
-            {
-                timer.Enabled = false;
-                DateTime actual = DateTime.Now;
-                milli = actual.Millisecond - absoluteRef.Millisecond;
-                sec = actual.Second - absoluteRef.Second;
-                min = actual.Minute - absoluteRef.Minute;
-                hour = actual.Hour - absoluteRef.Hour;
-                
-                if (min < 0)
-                {
-                    hour++;
-                    min += 60;
-                }
-                if (sec < 0)
-                {
-                    min++;
-                    sec += 60;
-                }
-                if (milli < 0)
-                {
-                    sec++;
-                    milli += 1000;
-                }
+                UpdateTimerFromAbsoluteReference();
+        }
 
-                UpdateTimer();
-                timer.Enabled = true;
-            }
+        private void UpdateTimerFromAbsoluteReference()
+        {
+            timer.Enabled = false;
+            DateTime actual = DateTime.Now;
+            milli = actual.Millisecond - absoluteRef.Millisecond;
+            sec = actual.Second - absoluteRef.Second;
+            min = actual.Minute - absoluteRef.Minute;
+            hour = actual.Hour - absoluteRef.Hour;
+
+            if (min < 0)
+                min += 60;
+            if (sec < 0)
+                sec += 60;
+            if (milli < 0)
+                milli += 1000;
+
+            UpdateTimer();
+            timer.Enabled = true;
         }
 
         private void GetAndApplySettings()
@@ -133,7 +127,6 @@ namespace YourStopWatch
             startButton = FindViewById<Button>(Resource.Id.startButton);
             stopButton = FindViewById<Button>(Resource.Id.stopButton);
             pauseButton = FindViewById<Button>(Resource.Id.pauseButton);
-            cancelButton = FindViewById<Button>(Resource.Id.cancelButton);
             resetButton = FindViewById<Button>(Resource.Id.resetButton);
 
             timerView = FindViewById<TextView>(Resource.Id.timerView);
@@ -244,13 +237,6 @@ namespace YourStopWatch
                 }
             };
 
-            cancelButton.Click += delegate
-            {
-                ToggleButtonsEndTimer();
-                ExtractTimerSpan();
-                UpdateClock();
-            };
-
             stopButton.Click += delegate
             {
                 ToggleButtonsEndTimer();
@@ -287,7 +273,6 @@ namespace YourStopWatch
         {
             startButton.Enabled = false;
             pauseButton.Enabled = true;
-            cancelButton.Enabled = true;
             stopButton.Enabled = true;
         }
 
@@ -295,7 +280,6 @@ namespace YourStopWatch
         {
             startButton.Enabled = false;
             pauseButton.Enabled = true;
-            cancelButton.Enabled = false;
             stopButton.Enabled = false;
         }
 
@@ -303,7 +287,6 @@ namespace YourStopWatch
         {
             startButton.Enabled = true;
             pauseButton.Enabled = false;
-            cancelButton.Enabled = false;
             stopButton.Enabled = false;
         }
 
@@ -334,6 +317,7 @@ namespace YourStopWatch
                 {
                     sec = 0;
                     min++;
+                    UpdateTimerFromAbsoluteReference();
                     if (min >= 60)
                     {
                         min = 0;
