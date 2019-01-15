@@ -2615,14 +2615,14 @@ namespace YourStopWatch
 			// aapt resource value: 0x7f080061
 			public const int list_item = 2131230817;
 			
-			// aapt resource value: 0x7f0800b8
-			public const int masked = 2131230904;
+			// aapt resource value: 0x7f0800ba
+			public const int masked = 2131230906;
 			
 			// aapt resource value: 0x7f0800a9
 			public const int media_actions = 2131230889;
 			
-			// aapt resource value: 0x7f0800b6
-			public const int message = 2131230902;
+			// aapt resource value: 0x7f0800b8
+			public const int message = 2131230904;
 			
 			// aapt resource value: 0x7f080031
 			public const int middle = 2131230769;
@@ -2636,17 +2636,17 @@ namespace YourStopWatch
 			// aapt resource value: 0x7f08008c
 			public const int navigation = 2131230860;
 			
-			// aapt resource value: 0x7f0800ba
-			public const int navigation_dashboard = 2131230906;
+			// aapt resource value: 0x7f0800bc
+			public const int navigation_dashboard = 2131230908;
 			
 			// aapt resource value: 0x7f080094
 			public const int navigation_header_container = 2131230868;
 			
-			// aapt resource value: 0x7f0800b9
-			public const int navigation_home = 2131230905;
-			
 			// aapt resource value: 0x7f0800bb
-			public const int navigation_notifications = 2131230907;
+			public const int navigation_home = 2131230907;
+			
+			// aapt resource value: 0x7f0800bd
+			public const int navigation_notifications = 2131230909;
 			
 			// aapt resource value: 0x7f08003b
 			public const int never = 2131230779;
@@ -2665,6 +2665,9 @@ namespace YourStopWatch
 			
 			// aapt resource value: 0x7f0800ab
 			public const int notification_main_column_container = 2131230891;
+			
+			// aapt resource value: 0x7f0800b6
+			public const int outText = 2131230902;
 			
 			// aapt resource value: 0x7f08004c
 			public const int parallax = 2131230796;
@@ -2689,6 +2692,9 @@ namespace YourStopWatch
 			
 			// aapt resource value: 0x7f080075
 			public const int radio = 2131230837;
+			
+			// aapt resource value: 0x7f0800b7
+			public const int removeButton = 2131230903;
 			
 			// aapt resource value: 0x7f0800a2
 			public const int resetButton = 2131230882;
@@ -2897,8 +2903,8 @@ namespace YourStopWatch
 			// aapt resource value: 0x7f080016
 			public const int view_offset_helper = 2131230742;
 			
-			// aapt resource value: 0x7f0800b7
-			public const int visible = 2131230903;
+			// aapt resource value: 0x7f0800b9
+			public const int visible = 2131230905;
 			
 			// aapt resource value: 0x7f08003c
 			public const int withText = 2131230780;
@@ -3146,10 +3152,13 @@ namespace YourStopWatch
 			public const int select_dialog_singlechoice_material = 2130968636;
 			
 			// aapt resource value: 0x7f04003d
-			public const int support_simple_spinner_dropdown_item = 2130968637;
+			public const int single_output = 2130968637;
 			
 			// aapt resource value: 0x7f04003e
-			public const int tooltip = 2130968638;
+			public const int support_simple_spinner_dropdown_item = 2130968638;
+			
+			// aapt resource value: 0x7f04003f
+			public const int tooltip = 2130968639;
 			
 			static Layout()
 			{

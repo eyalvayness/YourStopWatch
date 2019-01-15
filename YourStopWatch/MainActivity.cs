@@ -14,7 +14,6 @@ using SQLite;
 using System.ComponentModel;
 using Android.Content;
 using Android.Animation;
-using Android.Views.Animations;
 
 namespace YourStopWatch
 {
@@ -34,7 +33,6 @@ namespace YourStopWatch
         readonly string dbFolder = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal);
         const string dbName = "SavedTimesDataBase.db3";
         int milli = 0, sec = 0, min = 0, hour = 0;
-        bool isTimerPaused = false;
         const int maxSec = 60, maxMin = 60, maxHour = 6, bitmapLength = 500;
         const float secOffset = 100, minOffset = 50, hourOffset = 0;
 
@@ -46,6 +44,7 @@ namespace YourStopWatch
             container = FindViewById<RelativeLayout>(Resource.Id.container);
             LayoutTransition trans = new LayoutTransition();
             container.LayoutTransition = trans;
+            addedView = null;
             MainPageSetup();
 
             ToggleButtonsEndTimer();
@@ -56,7 +55,8 @@ namespace YourStopWatch
 
         private void CommonPageSetup(int pageId)
         {
-            container.RemoveView(addedView);
+            if (addedView != null)
+                container.RemoveView(addedView);
 
             LayoutInflater inflater = (LayoutInflater)BaseContext.GetSystemService(Context.LayoutInflaterService);
             addedView = inflater.Inflate(pageId, null);
@@ -96,7 +96,7 @@ namespace YourStopWatch
             SetButtonsListeners();
             if (timer == null)
                 ToggleButtonsEndTimer();
-            else if (isTimerPaused)
+            else if (!timer.Enabled)
             {
                 pauseButton.Text = "continue";
                 ToggleButtonsPauseTimer();
@@ -123,28 +123,24 @@ namespace YourStopWatch
             {
                 ToggleButtonsStartTimer();
                 UpdateClock();
-                timer = new Timer
-                {
-                    Interval = 10
-                };
+                timer = new Timer(10);
+                timer.AutoReset = true;
                 timer.Elapsed += Timer_Elapsed;
-                timer.Start();
+                timer.Enabled = true;
             };
 
             pauseButton.Click += delegate
             {
-                if (!isTimerPaused)
+                if (timer.Enabled)
                 {
-                    isTimerPaused = true;
                     ToggleButtonsPauseTimer();
-                    timer.Stop();
+                    timer.Enabled = false;
                     pauseButton.Text = "continue";
                 }
-                else if (isTimerPaused)
+                else if (!timer.Enabled)
                 {
-                    isTimerPaused = false;
                     ToggleButtonsStartTimer();
-                    timer.Start();
+                    timer.Enabled = true;
                     pauseButton.Text = "pause";
                 }
             };
@@ -189,6 +185,7 @@ namespace YourStopWatch
             sec = 0;
             milli = 0;
             UpdateClock();
+            timer.Enabled = false;
             timer.Dispose();
             timer = null;
             return time;
@@ -218,7 +215,7 @@ namespace YourStopWatch
             stopButton.Enabled = false;
         }
 
-        private void UpdateClock()
+        public void UpdateClock()
         {
             timerView.Text = $"{hour}:{min}:{sec}:{milli/10}";
             canv.DrawColor(Color.Transparent, PorterDuff.Mode.Clear);
@@ -230,6 +227,11 @@ namespace YourStopWatch
         }
 
         private void Timer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            UpdateTimer();
+        }
+
+        public void UpdateTimer()
         {
             milli += 10;
             if (milli == 1000)
@@ -269,6 +271,7 @@ namespace YourStopWatch
             return false;
         }
     }
+
     [Table("Times")]
     public class Time : INotifyPropertyChanged
     {
