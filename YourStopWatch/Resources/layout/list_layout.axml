@@ -1,20 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+	android:id="@+id/listMainLayout">
 
 	<TextView
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
 		android:text="@string/title_list"
 		android:layout_centerHorizontal="true"
-		android:id="@+id/dashboardTitle"
+		android:id="@+id/listTitle"
 		android:layout_marginVertical="@dimen/activity_vertical_margin"
 		android:textSize="@dimen/font_size_large"/>
 
 	<ScrollView
 		android:id="@+id/scroller"
-		android:layout_below="@id/dashboardTitle"
+		android:layout_below="@id/listTitle"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 		
@@ -27,5 +28,13 @@
 		</LinearLayout>
 	
 	</ScrollView>
+
+	<Button
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_below="@id/scroller"
+		android:layout_centerHorizontal="true"
+		android:text="direct add time"
+		android:layout_marginVertical="@dimen/activity_vertical_margin"/>
 
 </RelativeLayout>
