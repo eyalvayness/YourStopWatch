@@ -163,7 +163,6 @@ namespace YourStopWatch
             Button startButton = layout.FindViewById<Button>(Resource.Id.startButton);
             Button stopButton = layout.FindViewById<Button>(Resource.Id.stopButton);
             Button pauseButton = layout.FindViewById<Button>(Resource.Id.pauseButton);
-            Button resetButton = layout.FindViewById<Button>(Resource.Id.resetButton);
 
             timerView = layout.FindViewById<TextView>(Resource.Id.timerView);
             stopwatchImgView = layout.FindViewById<ImageView>(Resource.Id.imgView);
@@ -181,7 +180,7 @@ namespace YourStopWatch
             minPaint.Color = Color.MediumBlue;
             hourPaint.Color = Color.OrangeRed;
 
-            SetButtonsListeners(startButton, stopButton, pauseButton, resetButton);
+            SetButtonsListeners(startButton, stopButton, pauseButton);
 
             return layout;
         }
@@ -190,6 +189,8 @@ namespace YourStopWatch
         {
             RelativeLayout layout = (RelativeLayout)((LayoutInflater)BaseContext.GetSystemService(Context.LayoutInflaterService)).Inflate(Resource.Layout.list_layout, null);
             outputContainer = layout.FindViewById<LinearLayout>(Resource.Id.outputContainer);
+            Button resetAllButton = layout.FindViewById<Button>(Resource.Id.resetAllButton);
+            Button manualAdd = layout.FindViewById<Button>(Resource.Id.directAdd);
 
             var db = new SQLiteConnection(System.IO.Path.Combine(dbFolder, dbName));
             db.CreateTable<Time>();
@@ -197,6 +198,29 @@ namespace YourStopWatch
 
             foreach (var t in table)
                 AddTimeToOutputList(t, db);
+
+            manualAdd.Click += delegate
+            {
+                Toast.MakeText(this, "Not implemented yet.", ToastLength.Short).Show();
+            };
+
+            resetAllButton.Click += delegate
+            {
+                var alert = new Android.Support.V7.App.AlertDialog.Builder(this);
+                alert.SetTitle("Be careful");
+                alert.SetMessage("Do you really want to delete all of the recorded times ?");
+
+                alert.SetPositiveButton("OK", delegate 
+                {
+                    db.DropTable<Time>();
+                    db.Close();
+                    outputContainer.RemoveAllViews();
+                    resetAllButton.Enabled = false;
+                });
+                alert.SetNegativeButton("CANCEL", delegate { return; });
+                var dialog = alert.Create();
+                dialog.Show();
+            };
 
             return layout;
         }
@@ -277,9 +301,15 @@ namespace YourStopWatch
         private void ListLayoutOutput()
         {
             CommonPageOutput(listLayout);
+            Button resetAllButton = FindViewById<Button>(Resource.Id.resetAllButton);
 
             if (outputContainer.ChildCount == 0)
+            {
                 Toast.MakeText(this, "There is no registered time for the moment.", ToastLength.Long).Show();
+                resetAllButton.Enabled = false;
+            }
+            else
+                resetAllButton.Enabled = true;
         }
 
         private void GrachicsLayoutOutput()
@@ -292,16 +322,8 @@ namespace YourStopWatch
             CommonPageOutput(settingsLayout);
         }
 
-        private void SetButtonsListeners(Button startButton, Button stopButton, Button pauseButton, Button resetButton)
+        private void SetButtonsListeners(Button startButton, Button stopButton, Button pauseButton)
         {
-            resetButton.Click += delegate
-            {
-                var db = new SQLiteConnection(System.IO.Path.Combine(dbFolder, dbName));
-                db.CreateTable<Time>();
-                db.DropTable<Time>();
-                db.Close();
-            };
-
             startButton.Click += delegate
             {
                 ToggleButtons(ButtonsState.Start);
@@ -382,7 +404,6 @@ namespace YourStopWatch
             Button startButton = stopwatchLayout.FindViewById<Button>(Resource.Id.startButton);
             Button stopButton = stopwatchLayout.FindViewById<Button>(Resource.Id.stopButton);
             Button pauseButton = stopwatchLayout.FindViewById<Button>(Resource.Id.pauseButton);
-            Button resetButton = stopwatchLayout.FindViewById<Button>(Resource.Id.resetButton);
 
             if (state == ButtonsState.Start)
             {
