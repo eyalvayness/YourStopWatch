@@ -49,20 +49,40 @@ namespace YourStopWatch
             LayoutTransition trans = new LayoutTransition();
             container.LayoutTransition = trans;
             addedView = null;
-            MainPageSetup();
+            StopWatchPageOutput();
 
             ToggleButtonsEndTimer();
 
-            navigation = FindViewById<BottomNavigationView>(Resource.Id.navigation);
+            navigation = FindViewById<BottomNavigationView>(Resource.Id.bottomNavigation);
             navigation.SetOnNavigationItemSelectedListener(this);
+        }
+
+        protected override void OnResume()
+        {
+            base.OnResume();
+
+            if (GetAndApplySettings())
+                UpdateTimerFromAbsoluteReference();
         }
 
         protected override void OnRestart()
         {
             base.OnRestart();
 
-            if (timer != null && timer.Enabled)
+            if (GetAndApplySettings())
                 UpdateTimerFromAbsoluteReference();
+        }
+
+        protected override void OnPause()
+        {
+            base.OnPause();
+            SaveSettings();
+        }
+
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+            SaveSettings();
         }
 
         private void UpdateTimerFromAbsoluteReference()
@@ -74,26 +94,41 @@ namespace YourStopWatch
             min = actual.Minute - absoluteRef.Minute;
             hour = actual.Hour - absoluteRef.Hour;
 
-            if (min < 0)
-                min += 60;
-            if (sec < 0)
-                sec += 60;
             if (milli < 0)
+            {
                 milli += 1000;
+                sec--;
+            }
+            if (sec < 0)
+            {
+                sec += 60;
+                min--;
+            }
+            if (min < 0)
+            {
+                min += 60;
+                hour--;
+            }
 
             UpdateTimer();
             timer.Enabled = true;
         }
 
-        private void GetAndApplySettings()
+        private bool GetAndApplySettings()
         {
             var settings = Application.Context.GetSharedPreferences(settingsName, FileCreationMode.Private);
             bitmapLength = settings.GetInt("bitmapLength", 500);
             maxHour = settings.GetInt("maxHour", 6);
+            milli = settings.GetInt("timerMilliseconds", 0);
+            sec = settings.GetInt("timerSeconds", 0);
+            min = settings.GetInt("timerMinutes", 0);
+            hour = settings.GetInt("timerHours", 0);
 
             secOffset = bitmapLength / 5f;
             minOffset = bitmapLength / 10f;
             hourOffset = 0;
+
+            return settings.GetBoolean("isTimerRunning", false);
         }
 
         private void SaveSettings()
@@ -101,14 +136,16 @@ namespace YourStopWatch
             var settings = Application.Context.GetSharedPreferences(settingsName, FileCreationMode.Private).Edit();
             settings.PutInt("bitmapLength", bitmapLength);
             settings.PutInt("maxHour", maxHour);
+            settings.PutInt("timerMillisenconds", milli);
+            settings.PutInt("timerSeconds", sec);
+            settings.PutInt("timerMinutes", min);
+            settings.PutInt("timerHours", hour);
+            if (timer != null)
+                settings.PutBoolean("isTimerRunning", timer.Enabled);
+            else
+                settings.PutBoolean("isTimerRunning", false);
 
             settings.Commit();
-        }
-
-        protected override void OnDestroy()
-        {
-            base.OnDestroy();
-            SaveSettings();
         }
 
         private void CommonPageSetup(int pageId)
@@ -121,9 +158,14 @@ namespace YourStopWatch
             container.AddView(addedView);
         }
 
-        private void MainPageSetup()
+        private void StopWatchPageSetup()
         {
-            CommonPageSetup(Resource.Layout.home_page);
+
+        }
+
+        private void StopWatchPageOutput()
+        {
+            CommonPageSetup(Resource.Layout.stopwatch_layout);
             startButton = FindViewById<Button>(Resource.Id.startButton);
             stopButton = FindViewById<Button>(Resource.Id.stopButton);
             pauseButton = FindViewById<Button>(Resource.Id.pauseButton);
@@ -162,9 +204,9 @@ namespace YourStopWatch
                 ToggleButtonsStartTimer();
         }
 
-        private void DashboarPageSetup()
+        private void ListPageOutput()
         {
-            CommonPageSetup(Resource.Layout.dashboard_page);
+            CommonPageSetup(Resource.Layout.list_layout);
             outputContainer = FindViewById<LinearLayout>(Resource.Id.outputContainer);
             TextView title = FindViewById<TextView>(Resource.Id.dashboardTitle);
             title.Gravity = GravityFlags.CenterHorizontal;
@@ -176,13 +218,11 @@ namespace YourStopWatch
 
             if (table.Count() == 0)
                 Toast.MakeText(this, "There is no registered time for the moment.", ToastLength.Long).Show();
-                
 
-            string toDisplay = "----------------------" + "\n";
             foreach (var t in table)
             {
                 LayoutInflater inflater = (LayoutInflater)BaseContext.GetSystemService(Context.LayoutInflaterService);
-                View timeView = inflater.Inflate(Resource.Layout.single_output, null);
+                View timeView = inflater.Inflate(Resource.Layout.single_output_layout, null);
                 TextView textOutput = timeView.FindViewById<TextView>(Resource.Id.outText);
                 Button removeButton = timeView.FindViewById<Button>(Resource.Id.removeButton);
                 outputContainer.AddView(timeView);
@@ -193,11 +233,9 @@ namespace YourStopWatch
                 {
                     outputContainer.RemoveView(timeView);
                     db.Delete<Time>(t.Id);
-                    Toast.MakeText(this, $"The {t.TimeSaved.ToShortTimeString()} of {t.TimeSaved.ToShortDateString()} has been deleted.", ToastLength.Long).Show();
+                    Toast.MakeText(this, $"The {t.TimeSaved.ToLongTimeString()} of {t.TimeSaved.ToShortDateString()} has been deleted.", ToastLength.Long).Show();
                 };
-                toDisplay += string.Format("{0} : {1} {2}\n", t.Id, t.TimeSaved.ToLongDateString(), t.TimeSaved.ToLongTimeString());
             }
-            Console.WriteLine(toDisplay + "-----------------------");
         }
 
         private void SetButtonsListeners()
@@ -247,8 +285,6 @@ namespace YourStopWatch
 
                 var db = new SQLiteConnection(System.IO.Path.Combine(dbFolder, dbName));
                 db.CreateTable<Time>();
-                if (db.Table<Time>().Count() == 0)
-                    Console.WriteLine(string.Format("{0} is empty", dbName));
                 db.Insert(savedTime);
                 db.Close();
                 UpdateClock();
@@ -335,13 +371,15 @@ namespace YourStopWatch
 
             switch (item.ItemId)
             {
-                case Resource.Id.navigation_home:
-                    MainPageSetup();
+                case Resource.Id.navigation_stopwatch:
+                    StopWatchPageOutput();
                     return true;
-                case Resource.Id.navigation_dashboard:
-                    DashboarPageSetup();
+                case Resource.Id.navigation_list:
+                    ListPageOutput();
                     return true;
-                case Resource.Id.navigation_notifications:
+                case Resource.Id.navigation_graphics:
+                    return true;
+                case Resource.Id.navigation_settings:
                     return true;
             }
             return false;

@@ -6,7 +6,7 @@
 	<TextView
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
-		android:text="@string/title_dashboard"
+		android:text="@string/title_list"
 		android:layout_centerHorizontal="true"
 		android:id="@+id/dashboardTitle"
 		android:layout_marginVertical="@dimen/activity_vertical_margin"
