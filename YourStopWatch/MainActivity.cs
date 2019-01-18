@@ -14,6 +14,9 @@ using SQLite;
 using System.ComponentModel;
 using Android.Content;
 using Android.Animation;
+using Microcharts;
+using SkiaSharp;
+using Microcharts.Droid;
 
 namespace YourStopWatch
 {
@@ -21,18 +24,19 @@ namespace YourStopWatch
     public class MainActivity : Android.Support.V7.App.AppCompatActivity, BottomNavigationView.IOnNavigationItemSelectedListener
     {
         LinearLayout outputContainer;
+        GridLayout listButtonsGrid;
         BottomNavigationView navigation;
         ImageView stopwatchImgView;
         Bitmap bmp;
         Canvas canv;
         RelativeLayout container, stopwatchLayout, listLayout, graphicsLayout, settingsLayout;
         Paint contour, background, secPaint, minPaint, hourPaint;
-        DateTime absoluteRef;
+        DateTime absoluteRef, oldTimer;
         Timer timer;
         View addedView = null;
         TextView timerView;
-        readonly string dbFolder = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal);
         const string dbName = "SavedTimesDataBase.db3", settingsName = "AppSettings";
+        readonly static string dbFolder = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), dbPath = System.IO.Path.Combine(dbFolder, dbName);
         bool showCircle;
         int milli = 0, sec = 0, min = 0, hour = 0, maxHour = 6, bitmapLength = 500;
         const int maxSec = 60, maxMin = 60;
@@ -43,12 +47,13 @@ namespace YourStopWatch
             base.OnCreate(savedInstanceState);
             SetContentView(Resource.Layout.activity_main);
 
-            GetAndApplySettings();
-
             container = FindViewById<RelativeLayout>(Resource.Id.container);
-            LayoutTransition trans = new LayoutTransition();
-            container.LayoutTransition = trans;
+            container.LayoutTransition = new LayoutTransition();
             addedView = null;
+            navigation = FindViewById<BottomNavigationView>(Resource.Id.bottomNavigation);
+            navigation.SetOnNavigationItemSelectedListener(this);
+
+            GetAndApplySettings();
             
             stopwatchLayout = StopWatchLayoutSetup();
             listLayout = ListLayoutSetup();
@@ -59,8 +64,6 @@ namespace YourStopWatch
 
             ToggleButtons(ButtonsState.End);
 
-            navigation = FindViewById<BottomNavigationView>(Resource.Id.bottomNavigation);
-            navigation.SetOnNavigationItemSelectedListener(this);
         }
 
         protected override void OnResume()
@@ -71,24 +74,16 @@ namespace YourStopWatch
                 UpdateTimerFromAbsoluteReference();
         }
 
-        protected override void OnRestart()
-        {
-            base.OnRestart();
-
-            if (GetAndApplySettings())
-                UpdateTimerFromAbsoluteReference();
-        }
-
         protected override void OnPause()
         {
             base.OnPause();
-            SaveSettings();
+            SaveSettings(true);
         }
 
         protected override void OnDestroy()
         {
             base.OnDestroy();
-            SaveSettings();
+            SaveSettings(false);
         }
 
         private void UpdateTimerFromAbsoluteReference()
@@ -100,24 +95,62 @@ namespace YourStopWatch
             min = actual.Minute - absoluteRef.Minute;
             hour = actual.Hour - absoluteRef.Hour;
 
-            if (milli < 0)
+            MapTimerValues();
+
+            milli += oldTimer.Millisecond;
+            sec += oldTimer.Second;
+            min += oldTimer.Minute;
+            hour += oldTimer.Hour;
+
+            MapTimerValues();
+
+            oldTimer = new DateTime(actual.Year, actual.Month, actual.Day, hour, min, sec, milli);
+            absoluteRef = actual;
+
+            UpdateTimer();
+            timer.Enabled = true;
+        }
+
+        public void MapTimerValues()
+        {
+            while (milli < 0)
             {
                 milli += 1000;
                 sec--;
             }
-            if (sec < 0)
+            while (sec < 0)
             {
                 sec += 60;
                 min--;
             }
-            if (min < 0)
+            while (min < 0)
             {
                 min += 60;
                 hour--;
             }
 
-            UpdateTimer();
-            timer.Enabled = true;
+            while (milli >= 1000)
+            {
+                milli -= 1000;
+                sec++;
+            }
+            while (sec >= 60)
+            {
+                sec -= 60;
+                min++;
+            }
+            while (min >= 60)
+            {
+                min -= 60;
+                hour++;
+            }
+        }
+
+        public void GetNewTimer()
+        {
+            timer = new Timer(10);
+            timer.Elapsed += Timer_Elapsed;
+            timer.AutoReset = true;
         }
 
         private bool GetAndApplySettings()
@@ -135,10 +168,26 @@ namespace YourStopWatch
             minOffset = bitmapLength / 10f;
             hourOffset = 0;
 
-            return settings.GetBoolean("isTimerRunning", false);
+            bool wasTimerRunning = settings.GetBoolean("isTimerRunning", false);
+
+            oldTimer = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, hour, min, sec, milli);
+
+            if (wasTimerRunning)
+                absoluteRef = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day,
+            settings.GetInt("refMilliseconds", 0),
+            settings.GetInt("refSeconds", 0),
+            settings.GetInt("refMinutes", 0),
+            settings.GetInt("refHours", 0));
+
+            if (settings.GetInt("currentMonth", DateTime.Now.Month) != DateTime.Now.Month)
+            {
+                var db = new SQLiteConnection(dbPath);
+            }
+
+            return wasTimerRunning;
         }
 
-        private void SaveSettings()
+        private void SaveSettings(bool keepActivity)
         {
             var settings = Application.Context.GetSharedPreferences(settingsName, FileCreationMode.Private).Edit();
             settings.PutInt("bitmapLength", bitmapLength);
@@ -147,8 +196,16 @@ namespace YourStopWatch
             settings.PutInt("timerSeconds", sec);
             settings.PutInt("timerMinutes", min);
             settings.PutInt("timerHours", hour);
-            if (timer != null)
+            settings.PutInt("currentMonth", DateTime.Now.Month);
+
+            if (timer != null && keepActivity)
+            {
                 settings.PutBoolean("isTimerRunning", timer.Enabled);
+                settings.PutInt("refMillisenconds", DateTime.Now.Millisecond);
+                settings.PutInt("refSeconds",  DateTime.Now.Second);
+                settings.PutInt("refMinutes", DateTime.Now.Minute);
+                settings.PutInt("refHours", DateTime.Now.Hour);
+            }
             else
                 settings.PutBoolean("isTimerRunning", false);
 
@@ -189,31 +246,45 @@ namespace YourStopWatch
         {
             RelativeLayout layout = (RelativeLayout)((LayoutInflater)BaseContext.GetSystemService(Context.LayoutInflaterService)).Inflate(Resource.Layout.list_layout, null);
             outputContainer = layout.FindViewById<LinearLayout>(Resource.Id.outputContainer);
+            outputContainer.LayoutTransition = new LayoutTransition();
+            listButtonsGrid = layout.FindViewById<GridLayout>(Resource.Id.listButtonsGrid);
             Button resetAllButton = layout.FindViewById<Button>(Resource.Id.resetAllButton);
             Button manualAdd = layout.FindViewById<Button>(Resource.Id.directAdd);
 
-            var db = new SQLiteConnection(System.IO.Path.Combine(dbFolder, dbName));
+            var db = new SQLiteConnection(dbPath);
             db.CreateTable<Time>();
             var table = db.Table<Time>();
 
             foreach (var t in table)
-                AddTimeToOutputList(t, new SQLiteConnection(System.IO.Path.Combine(dbFolder, dbName)));
+                AddTimeToOutputList(t, new SQLiteConnection(dbPath));
 
             manualAdd.Click += delegate
             {
-                //Toast.MakeText(this, "Not implemented yet.", ToastLength.Short).Show();
-                TimePickerFragment timePickerFrag = TimePickerFragment.NewInstance();
-                DatePickerFragment datePickerFragment = DatePickerFragment.NewInstance();
-                datePickerFragment.ShowDialog(FragmentManager, DatePickerFragment.TAG);
-                timePickerFrag.Show(FragmentManager, TimePickerFragment.TAG);
-                DateTime date = datePickerFragment.selectedDate;
-                DateTime time = timePickerFrag.selectedTime;
-
-                Time t = new Time
+                var dateBuilder = new Android.Support.V7.App.AlertDialog.Builder(this);
+                DatePicker datePicker = new DatePicker(this);
+                dateBuilder.SetView(datePicker);
+                dateBuilder.SetNegativeButton("Cancel", delegate { return; });
+                dateBuilder.SetPositiveButton("OK", delegate 
                 {
-                    TimeSaved = new DateTime(date.Year, date.Month, date.Day, time.Hour, time.Minute, 0)
-                };
-                AddTimeToOutputList(t, new SQLiteConnection(System.IO.Path.Combine(dbFolder, dbName)));
+                    var timeBuilder = new Android.Support.V7.App.AlertDialog.Builder(this);
+                    TimePicker timePicker = new TimePicker(this);
+                    timePicker.SetIs24HourView(new Java.Lang.Boolean(true));
+                    timePicker.Hour = 0;
+                    timePicker.Minute = 0;
+                    timeBuilder.SetView(timePicker);
+                    timeBuilder.SetNegativeButton("Cancel", delegate { return; });
+                    timeBuilder.SetPositiveButton("Save Time", delegate 
+                    {
+                        Time t = new Time
+                        {
+                            TimeSaved = new DateTime(datePicker.Year, datePicker.Month + 1, datePicker.DayOfMonth, timePicker.Hour, timePicker.Minute, 0)
+                        };
+                        db.Insert(t);
+                        AddTimeToOutputList(t, db);
+                    });
+                    timeBuilder.Create().Show();
+                });
+                dateBuilder.Create().Show();
             };
 
             resetAllButton.Click += delegate
@@ -225,7 +296,6 @@ namespace YourStopWatch
                 alert.SetPositiveButton("OK", delegate 
                 {
                     db.DropTable<Time>();
-                    db.Close();
                     outputContainer.RemoveAllViews();
                     resetAllButton.Enabled = false;
                 });
@@ -241,7 +311,6 @@ namespace YourStopWatch
         {
             RelativeLayout layout = (RelativeLayout)((LayoutInflater)BaseContext.GetSystemService(Context.LayoutInflaterService)).Inflate(Resource.Layout.graphics_layout, null);
             TextView title = layout.FindViewById<TextView>(Resource.Id.graphicsTitle);
-
             return layout;
         }
 
@@ -327,6 +396,44 @@ namespace YourStopWatch
         private void GrachicsLayoutOutput()
         {
             CommonPageOutput(graphicsLayout);
+            ChartView chartView = FindViewById<ChartView>(Resource.Id.chartView);
+
+            Entry[] entries = new Entry[7];
+            float[] hourPerDay = new float[7];
+            var db = new SQLiteConnection(dbPath);
+            db.CreateTable<Time>();
+            var table = db.Table<Time>();
+            string[] dayOfWeekNames = new string[]
+            {
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday",
+                "Sunday"
+            };
+
+            foreach (Time t in table)
+            {
+                if (Math.Abs(t.TimeSaved.DayOfWeek - DateTime.Now.DayOfWeek) == Math.Abs(t.TimeSaved.DayOfYear - DateTime.Now.DayOfYear))
+                {
+                    hourPerDay[(int)t.TimeSaved.DayOfWeek - 1] += t.TimeSaved.Hour + t.TimeSaved.Minute / 60f;
+                }
+            }
+
+            for (int i = 0; i < 7; i++)
+            {
+                entries[i] = new Entry(hourPerDay[i])
+                {
+                    Label = dayOfWeekNames[i],
+                    ValueLabel = hourPerDay[i].ToString("n2")
+                };
+            }
+
+            BarChart chart = new BarChart { Entries = entries };
+            chart.LabelTextSize = 30;
+            chartView.Chart = chart;
         }
 
         private void SettingsLayoutOutput()
@@ -341,23 +448,23 @@ namespace YourStopWatch
                 ToggleButtons(ButtonsState.Start);
                 UpdateClock();
                 absoluteRef = DateTime.Now;
-                timer = new Timer(10);
-                timer.Elapsed += Timer_Elapsed;
-                timer.AutoReset = true;
+                oldTimer = new DateTime(absoluteRef.Year, absoluteRef.Month, absoluteRef.Day, hour, min, sec, milli);
+                GetNewTimer();
                 timer.Enabled = true;
             };
 
             pauseButton.Click += delegate
             {
+                ToggleButtons(ButtonsState.Start);
                 if (timer.Enabled)
                 {
-                    ToggleButtons(ButtonsState.Start);
                     timer.Enabled = false;
                     pauseButton.Text = "continue";
                 }
                 else if (!timer.Enabled)
                 {
-                    ToggleButtons(ButtonsState.Start);
+                    absoluteRef = DateTime.Now;
+                    oldTimer = new DateTime(absoluteRef.Year, absoluteRef.Month, absoluteRef.Day, hour, min, sec, milli);
                     timer.Enabled = true;
                     pauseButton.Text = "pause";
                 }
@@ -371,7 +478,7 @@ namespace YourStopWatch
                     TimeSaved = ExtractTimerSpan()
                 };
 
-                var db = new SQLiteConnection(System.IO.Path.Combine(dbFolder, dbName));
+                var db = new SQLiteConnection(dbPath);
                 db.CreateTable<Time>();
                 db.Insert(savedTime);
                 AddTimeToOutputList(savedTime, db);
@@ -385,9 +492,9 @@ namespace YourStopWatch
             View timeView = inflater.Inflate(Resource.Layout.single_output_layout, null);
             TextView textOutput = timeView.FindViewById<TextView>(Resource.Id.outText);
             Button removeButton = timeView.FindViewById<Button>(Resource.Id.removeButton);
-            outputContainer.AddView(timeView);
+            outputContainer.AddView(timeView, outputContainer.IndexOfChild(listButtonsGrid));
 
-            textOutput.Text = string.Format("{0}\n{1}", t.TimeSaved.ToLongDateString(), t.TimeSaved.ToLongTimeString());
+            textOutput.Text = string.Format("{0}\n{1}", t.TimeSaved.ToLongDateString(), t.TimeSaved.ToShortTimeString());
 
             removeButton.Click += delegate
             {
@@ -428,7 +535,7 @@ namespace YourStopWatch
             {
                 startButton.Enabled = false;
                 pauseButton.Enabled = true;
-
+                stopButton.Enabled = false;
             }
             else if (state == ButtonsState.End)
             {
