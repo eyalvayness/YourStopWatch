@@ -197,11 +197,23 @@ namespace YourStopWatch
             var table = db.Table<Time>();
 
             foreach (var t in table)
-                AddTimeToOutputList(t, db);
+                AddTimeToOutputList(t, new SQLiteConnection(System.IO.Path.Combine(dbFolder, dbName)));
 
             manualAdd.Click += delegate
             {
-                Toast.MakeText(this, "Not implemented yet.", ToastLength.Short).Show();
+                //Toast.MakeText(this, "Not implemented yet.", ToastLength.Short).Show();
+                TimePickerFragment timePickerFrag = TimePickerFragment.NewInstance();
+                DatePickerFragment datePickerFragment = DatePickerFragment.NewInstance();
+                datePickerFragment.ShowDialog(FragmentManager, DatePickerFragment.TAG);
+                timePickerFrag.Show(FragmentManager, TimePickerFragment.TAG);
+                DateTime date = datePickerFragment.selectedDate;
+                DateTime time = timePickerFrag.selectedTime;
+
+                Time t = new Time
+                {
+                    TimeSaved = new DateTime(date.Year, date.Month, date.Day, time.Hour, time.Minute, 0)
+                };
+                AddTimeToOutputList(t, new SQLiteConnection(System.IO.Path.Combine(dbFolder, dbName)));
             };
 
             resetAllButton.Click += delegate
@@ -381,6 +393,7 @@ namespace YourStopWatch
             {
                 outputContainer.RemoveView(timeView);
                 db.Delete<Time>(t.Id);
+                db.Close();
                 Toast.MakeText(this, $"The {t.TimeSaved.ToLongTimeString()} of {t.TimeSaved.ToShortDateString()} has been deleted.", ToastLength.Long).Show();
             };
         }
