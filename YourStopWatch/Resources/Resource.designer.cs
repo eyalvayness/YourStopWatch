@@ -26,7 +26,6 @@ namespace YourStopWatch
 		
 		public static void UpdateIdValues()
 		{
-			global::Microcharts.Droid.Resource.String.library_name = global::YourStopWatch.Resource.String.library_name;
 		}
 		
 		public partial class Animation
@@ -2634,8 +2633,8 @@ namespace YourStopWatch
 			// aapt resource value: 0x7f080037
 			public const int SYM = 2131230775;
 			
-			// aapt resource value: 0x7f0800a7
-			public const int action0 = 2131230887;
+			// aapt resource value: 0x7f0800a6
+			public const int action0 = 2131230886;
 			
 			// aapt resource value: 0x7f08007c
 			public const int action_bar = 2131230844;
@@ -2658,17 +2657,17 @@ namespace YourStopWatch
 			// aapt resource value: 0x7f08005a
 			public const int action_bar_title = 2131230810;
 			
-			// aapt resource value: 0x7f0800a4
-			public const int action_container = 2131230884;
+			// aapt resource value: 0x7f0800a3
+			public const int action_container = 2131230883;
 			
 			// aapt resource value: 0x7f08007d
 			public const int action_context_bar = 2131230845;
 			
-			// aapt resource value: 0x7f0800ab
-			public const int action_divider = 2131230891;
+			// aapt resource value: 0x7f0800aa
+			public const int action_divider = 2131230890;
 			
-			// aapt resource value: 0x7f0800a5
-			public const int action_image = 2131230885;
+			// aapt resource value: 0x7f0800a4
+			public const int action_image = 2131230884;
 			
 			// aapt resource value: 0x7f080003
 			public const int action_menu_divider = 2131230723;
@@ -2685,11 +2684,11 @@ namespace YourStopWatch
 			// aapt resource value: 0x7f08005c
 			public const int action_mode_close_button = 2131230812;
 			
-			// aapt resource value: 0x7f0800a6
-			public const int action_text = 2131230886;
+			// aapt resource value: 0x7f0800a5
+			public const int action_text = 2131230885;
 			
-			// aapt resource value: 0x7f0800b4
-			public const int actions = 2131230900;
+			// aapt resource value: 0x7f0800b3
+			public const int actions = 2131230899;
 			
 			// aapt resource value: 0x7f08005d
 			public const int activity_chooser_view_content = 2131230813;
@@ -2730,8 +2729,8 @@ namespace YourStopWatch
 			// aapt resource value: 0x7f080063
 			public const int buttonPanel = 2131230819;
 			
-			// aapt resource value: 0x7f0800a8
-			public const int cancel_action = 2131230888;
+			// aapt resource value: 0x7f0800a7
+			public const int cancel_action = 2131230887;
 			
 			// aapt resource value: 0x7f080045
 			public const int center = 2131230789;
@@ -2742,14 +2741,11 @@ namespace YourStopWatch
 			// aapt resource value: 0x7f080047
 			public const int center_vertical = 2131230791;
 			
-			// aapt resource value: 0x7f08009c
-			public const int chartView = 2131230876;
-			
 			// aapt resource value: 0x7f080073
 			public const int checkbox = 2131230835;
 			
-			// aapt resource value: 0x7f0800b0
-			public const int chronometer = 2131230896;
+			// aapt resource value: 0x7f0800af
+			public const int chronometer = 2131230895;
 			
 			// aapt resource value: 0x7f08004e
 			public const int clip_horizontal = 2131230798;
@@ -2796,8 +2792,8 @@ namespace YourStopWatch
 			// aapt resource value: 0x7f080095
 			public const int design_navigation_view = 2131230869;
 			
-			// aapt resource value: 0x7f0800a2
-			public const int directAdd = 2131230882;
+			// aapt resource value: 0x7f0800a1
+			public const int directAdd = 2131230881;
 			
 			// aapt resource value: 0x7f080020
 			public const int disableHome = 2131230752;
@@ -2808,8 +2804,8 @@ namespace YourStopWatch
 			// aapt resource value: 0x7f080030
 			public const int end = 2131230768;
 			
-			// aapt resource value: 0x7f0800b6
-			public const int end_padder = 2131230902;
+			// aapt resource value: 0x7f0800b5
+			public const int end_padder = 2131230901;
 			
 			// aapt resource value: 0x7f08003f
 			public const int enterAlways = 2131230783;
@@ -2825,6 +2821,9 @@ namespace YourStopWatch
 			
 			// aapt resource value: 0x7f080072
 			public const int expanded_menu = 2131230834;
+			
+			// aapt resource value: 0x7f0800c8
+			public const int fakeNavStopwatch = 2131230920;
 			
 			// aapt resource value: 0x7f080050
 			public const int fill = 2131230800;
@@ -2859,11 +2858,11 @@ namespace YourStopWatch
 			// aapt resource value: 0x7f080062
 			public const int icon = 2131230818;
 			
-			// aapt resource value: 0x7f0800b7
-			public const int icon_frame = 2131230903;
+			// aapt resource value: 0x7f0800b6
+			public const int icon_frame = 2131230902;
 			
-			// aapt resource value: 0x7f0800b5
-			public const int icon_group = 2131230901;
+			// aapt resource value: 0x7f0800b4
+			public const int icon_group = 2131230900;
 			
 			// aapt resource value: 0x7f08003a
 			public const int ifRoom = 2131230778;
@@ -2874,8 +2873,8 @@ namespace YourStopWatch
 			// aapt resource value: 0x7f0800cb
 			public const int imgView = 2131230923;
 			
-			// aapt resource value: 0x7f0800b1
-			public const int info = 2131230897;
+			// aapt resource value: 0x7f0800b0
+			public const int info = 2131230896;
 			
 			// aapt resource value: 0x7f080059
 			public const int italic = 2131230809;
@@ -2895,20 +2894,20 @@ namespace YourStopWatch
 			// aapt resource value: 0x7f080018
 			public const int line3 = 2131230744;
 			
-			// aapt resource value: 0x7f0800b9
-			public const int list = 2131230905;
+			// aapt resource value: 0x7f0800b8
+			public const int list = 2131230904;
 			
-			// aapt resource value: 0x7f0800a1
-			public const int listButtonsGrid = 2131230881;
+			// aapt resource value: 0x7f0800a0
+			public const int listButtonsGrid = 2131230880;
 			
-			// aapt resource value: 0x7f08009d
-			public const int listMainLayout = 2131230877;
+			// aapt resource value: 0x7f08009c
+			public const int listMainLayout = 2131230876;
 			
 			// aapt resource value: 0x7f08001d
 			public const int listMode = 2131230749;
 			
-			// aapt resource value: 0x7f08009e
-			public const int listTitle = 2131230878;
+			// aapt resource value: 0x7f08009d
+			public const int listTitle = 2131230877;
 			
 			// aapt resource value: 0x7f080061
 			public const int list_item = 2131230817;
@@ -2916,11 +2915,11 @@ namespace YourStopWatch
 			// aapt resource value: 0x7f0800d3
 			public const int masked = 2131230931;
 			
-			// aapt resource value: 0x7f0800c5
-			public const int max_hour_picker = 2131230917;
+			// aapt resource value: 0x7f0800c4
+			public const int max_hour_picker = 2131230916;
 			
-			// aapt resource value: 0x7f0800aa
-			public const int media_actions = 2131230890;
+			// aapt resource value: 0x7f0800a9
+			public const int media_actions = 2131230889;
 			
 			// aapt resource value: 0x7f0800d1
 			public const int message = 2131230929;
@@ -2958,20 +2957,20 @@ namespace YourStopWatch
 			// aapt resource value: 0x7f08001e
 			public const int normal = 2131230750;
 			
-			// aapt resource value: 0x7f0800b3
-			public const int notification_background = 2131230899;
-			
-			// aapt resource value: 0x7f0800ad
-			public const int notification_main_column = 2131230893;
+			// aapt resource value: 0x7f0800b2
+			public const int notification_background = 2131230898;
 			
 			// aapt resource value: 0x7f0800ac
-			public const int notification_main_column_container = 2131230892;
+			public const int notification_main_column = 2131230892;
 			
-			// aapt resource value: 0x7f0800c8
-			public const int outText = 2131230920;
+			// aapt resource value: 0x7f0800ab
+			public const int notification_main_column_container = 2131230891;
 			
-			// aapt resource value: 0x7f0800a0
-			public const int outputContainer = 2131230880;
+			// aapt resource value: 0x7f0800c7
+			public const int outText = 2131230919;
+			
+			// aapt resource value: 0x7f08009f
+			public const int outputContainer = 2131230879;
 			
 			// aapt resource value: 0x7f08004c
 			public const int parallax = 2131230796;
@@ -2997,26 +2996,26 @@ namespace YourStopWatch
 			// aapt resource value: 0x7f080075
 			public const int radio = 2131230837;
 			
-			// aapt resource value: 0x7f0800c2
-			public const int radius_seek_bar = 2131230914;
+			// aapt resource value: 0x7f0800c1
+			public const int radius_seek_bar = 2131230913;
 			
-			// aapt resource value: 0x7f0800c0
-			public const int radius_setting_layout = 2131230912;
+			// aapt resource value: 0x7f0800bf
+			public const int radius_setting_layout = 2131230911;
 			
-			// aapt resource value: 0x7f0800c7
-			public const int removeButton = 2131230919;
+			// aapt resource value: 0x7f0800c6
+			public const int removeButton = 2131230918;
 			
-			// aapt resource value: 0x7f0800a3
-			public const int resetAllButton = 2131230883;
+			// aapt resource value: 0x7f0800a2
+			public const int resetAllButton = 2131230882;
 			
 			// aapt resource value: 0x7f08004a
 			public const int right = 2131230794;
 			
-			// aapt resource value: 0x7f0800b2
-			public const int right_icon = 2131230898;
+			// aapt resource value: 0x7f0800b1
+			public const int right_icon = 2131230897;
 			
-			// aapt resource value: 0x7f0800ae
-			public const int right_side = 2131230894;
+			// aapt resource value: 0x7f0800ad
+			public const int right_side = 2131230893;
 			
 			// aapt resource value: 0x7f08000c
 			public const int save_image_matrix = 2131230732;
@@ -3045,8 +3044,8 @@ namespace YourStopWatch
 			// aapt resource value: 0x7f080055
 			public const int scrollable = 2131230805;
 			
-			// aapt resource value: 0x7f08009f
-			public const int scroller = 2131230879;
+			// aapt resource value: 0x7f08009e
+			public const int scroller = 2131230878;
 			
 			// aapt resource value: 0x7f080080
 			public const int search_badge = 2131230848;
@@ -3078,32 +3077,32 @@ namespace YourStopWatch
 			// aapt resource value: 0x7f080089
 			public const int search_voice_btn = 2131230857;
 			
-			// aapt resource value: 0x7f0800ba
-			public const int seekbar = 2131230906;
+			// aapt resource value: 0x7f0800b9
+			public const int seekbar = 2131230905;
 			
-			// aapt resource value: 0x7f0800bb
-			public const int seekbar_value = 2131230907;
+			// aapt resource value: 0x7f0800ba
+			public const int seekbar_value = 2131230906;
 			
 			// aapt resource value: 0x7f08008a
 			public const int select_dialog_listview = 2131230858;
 			
-			// aapt resource value: 0x7f0800c6
-			public const int setting_max_hour = 2131230918;
+			// aapt resource value: 0x7f0800c5
+			public const int setting_max_hour = 2131230917;
 			
-			// aapt resource value: 0x7f0800c1
-			public const int setting_radius = 2131230913;
+			// aapt resource value: 0x7f0800c0
+			public const int setting_radius = 2131230912;
 			
-			// aapt resource value: 0x7f0800c3
-			public const int setting_show_circle = 2131230915;
-			
-			// aapt resource value: 0x7f0800bf
-			public const int settingsContainer = 2131230911;
-			
-			// aapt resource value: 0x7f0800bd
-			public const int settingsMainLayout = 2131230909;
+			// aapt resource value: 0x7f0800c2
+			public const int setting_show_circle = 2131230914;
 			
 			// aapt resource value: 0x7f0800be
-			public const int settingsTitle = 2131230910;
+			public const int settingsContainer = 2131230910;
+			
+			// aapt resource value: 0x7f0800bc
+			public const int settingsMainLayout = 2131230908;
+			
+			// aapt resource value: 0x7f0800bd
+			public const int settingsTitle = 2131230909;
 			
 			// aapt resource value: 0x7f080074
 			public const int shortcut = 2131230836;
@@ -3117,8 +3116,8 @@ namespace YourStopWatch
 			// aapt resource value: 0x7f080025
 			public const int showTitle = 2131230757;
 			
-			// aapt resource value: 0x7f0800c4
-			public const int show_circle_checkbox = 2131230916;
+			// aapt resource value: 0x7f0800c3
+			public const int show_circle_checkbox = 2131230915;
 			
 			// aapt resource value: 0x7f08008d
 			public const int smallLabel = 2131230861;
@@ -3135,8 +3134,8 @@ namespace YourStopWatch
 			// aapt resource value: 0x7f080064
 			public const int spacer = 2131230820;
 			
-			// aapt resource value: 0x7f0800b8
-			public const int spinner = 2131230904;
+			// aapt resource value: 0x7f0800b7
+			public const int spinner = 2131230903;
 			
 			// aapt resource value: 0x7f080008
 			public const int split_action_bar = 2131230728;
@@ -3156,8 +3155,8 @@ namespace YourStopWatch
 			// aapt resource value: 0x7f0800ce
 			public const int startButton = 2131230926;
 			
-			// aapt resource value: 0x7f0800a9
-			public const int status_bar_latest_event_content = 2131230889;
+			// aapt resource value: 0x7f0800a8
+			public const int status_bar_latest_event_content = 2131230888;
 			
 			// aapt resource value: 0x7f0800d0
 			public const int stopButton = 2131230928;
@@ -3174,8 +3173,8 @@ namespace YourStopWatch
 			// aapt resource value: 0x7f080087
 			public const int submit_area = 2131230855;
 			
-			// aapt resource value: 0x7f0800bc
-			public const int switchWidget = 2131230908;
+			// aapt resource value: 0x7f0800bb
+			public const int switchWidget = 2131230907;
 			
 			// aapt resource value: 0x7f08001f
 			public const int tabMode = 2131230751;
@@ -3204,8 +3203,8 @@ namespace YourStopWatch
 			// aapt resource value: 0x7f080015
 			public const int textinput_error = 2131230741;
 			
-			// aapt resource value: 0x7f0800af
-			public const int time = 2131230895;
+			// aapt resource value: 0x7f0800ae
+			public const int time = 2131230894;
 			
 			// aapt resource value: 0x7f0800cc
 			public const int timerView = 2131230924;
@@ -3704,8 +3703,8 @@ namespace YourStopWatch
 			// aapt resource value: 0x7f0a0012
 			public const int abc_toolbar_collapse_description = 2131361810;
 			
-			// aapt resource value: 0x7f0a002a
-			public const int app_name = 2131361834;
+			// aapt resource value: 0x7f0a0029
+			public const int app_name = 2131361833;
 			
 			// aapt resource value: 0x7f0a0020
 			public const int appbar_scrolling_view_behavior = 2131361824;
@@ -3716,11 +3715,8 @@ namespace YourStopWatch
 			// aapt resource value: 0x7f0a0022
 			public const int character_counter_pattern = 2131361826;
 			
-			// aapt resource value: 0x7f0a0029
-			public const int library_name = 2131361833;
-			
-			// aapt resource value: 0x7f0a002f
-			public const int null_timer = 2131361839;
+			// aapt resource value: 0x7f0a002e
+			public const int null_timer = 2131361838;
 			
 			// aapt resource value: 0x7f0a0023
 			public const int password_toggle_content_description = 2131361827;
@@ -3743,17 +3739,17 @@ namespace YourStopWatch
 			// aapt resource value: 0x7f0a0028
 			public const int status_bar_notification_info_overflow = 2131361832;
 			
-			// aapt resource value: 0x7f0a002e
-			public const int title_graphics = 2131361838;
-			
-			// aapt resource value: 0x7f0a002c
-			public const int title_list = 2131361836;
-			
 			// aapt resource value: 0x7f0a002d
-			public const int title_settings = 2131361837;
+			public const int title_graphics = 2131361837;
 			
 			// aapt resource value: 0x7f0a002b
-			public const int title_stopwatch = 2131361835;
+			public const int title_list = 2131361835;
+			
+			// aapt resource value: 0x7f0a002c
+			public const int title_settings = 2131361836;
+			
+			// aapt resource value: 0x7f0a002a
+			public const int title_stopwatch = 2131361834;
 			
 			// aapt resource value: 0x7f0a0000
 			public const int v7_preference_off = 2131361792;

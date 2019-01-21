@@ -1,25 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-	android:id="@+id/graphicsMainLayout">
+<RelativeLayout 
+	xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent">
 	
-	<TextView
-		android:layout_width="match_parent"
-		android:layout_height="wrap_content"
-		android:text="@string/title_graphics"
-		android:textAlignment="center"
-		android:id="@+id/graphicsTitle"
-		android:layout_marginVertical="@dimen/activity_vertical_margin"
-		android:textSize="@dimen/font_size_large"/>
-
-	<Microcharts.Droid.ChartView
-		android:layout_width="900px"
-		android:layout_height="900px"
-		android:layout_centerInParent="true"
-		android:layout_marginVertical="@dimen/activity_vertical_margin"
-		android:layout_marginHorizontal="@dimen/activity_horizontal_margin"
-		android:id="@+id/chartView" />
-
+	<RelativeLayout
+	    android:layout_width="match_parent"
+	    android:layout_height="match_parent"
+		android:id="@+id/graphicsMainLayout">
+	
+		<TextView
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:text="@string/title_graphics"
+			android:textAlignment="center"
+			android:id="@+id/graphicsTitle"
+			android:layout_marginVertical="@dimen/activity_vertical_margin"
+			android:textSize="@dimen/font_size_large"/>
+	
+	</RelativeLayout>
 </RelativeLayout>

@@ -1,127 +1,135 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-	android:id="@+id/settingsMainLayout">
-	
-	<TextView
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:text="@string/title_settings"
-		android:layout_centerHorizontal="true"
-		android:id="@+id/settingsTitle"
-		android:layout_marginVertical="@dimen/activity_vertical_margin"
-		android:textSize="@dimen/font_size_large"/>
-	
-	<LinearLayout
-		android:orientation="vertical"
-		android:id="@+id/settingsContainer"
+<RelativeLayout 
+	xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent">
+
+	<RelativeLayout
 		android:layout_width="match_parent"
-		android:layout_height="match_parent"
-		android:layout_below="@id/settingsTitle">
-
-		<RelativeLayout
+	    android:layout_height="match_parent"
+		android:id="@+id/settingsMainLayout">
+	
+		<TextView
+			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
-			android:layout_width="match_parent"
+			android:text="@string/title_settings"
+			android:layout_centerHorizontal="true"
+			android:id="@+id/settingsTitle"
 			android:layout_marginVertical="@dimen/activity_vertical_margin"
-			android:id="@+id/radius_setting_layout">
+			android:textSize="@dimen/font_size_large"/>
 		
-			<TextView
-				android:layout_height="wrap_content"
-				android:layout_width="wrap_content"
-				android:text="Stopwatch radius"
-				android:id="@+id/setting_radius"
-				android:textSize="@dimen/font_size_small"
-				android:layout_alignParentStart="true"
-				android:layout_marginHorizontal="@dimen/activity_horizontal_margin"/>
-
-			<TextView
-				android:layout_height="wrap_content"
-				android:layout_width="wrap_content"
-				android:text="*radius* px"
-				android:id="@+id/seekbar_value"
-				android:textSize="@dimen/font_size_xsmall"
-				android:layout_alignParentEnd="true"
-				android:layout_marginRight="@dimen/activity_horizontal_margin"/>
-
-			<SeekBar
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:id="@+id/radius_seek_bar"
-				android:layout_toRightOf="@id/setting_radius"
-				android:layout_toLeftOf="@id/seekbar_value"
-				android:min="300"
-				android:max="800"
-				android:layout_marginLeft="@dimen/activity_horizontal_margin"/>
-
-		</RelativeLayout>
-		
-		<View
+		<LinearLayout
+			android:orientation="vertical"
+			android:id="@+id/settingsContainer"
 			android:layout_width="match_parent"
-			android:layout_height="1dp"
-			android:layout_marginHorizontal="@dimen/activity_horizontal_margin"
-			android:background="@android:color/black"/>
-
-		<RelativeLayout
-			android:layout_width="match_parent"
-			android:layout_height="wrap_content"
-			android:layout_marginVertical="@dimen/activity_vertical_margin">
-
-			<TextView
-				android:layout_width="wrap_content"
+			android:layout_height="match_parent"
+			android:layout_below="@id/settingsTitle">
+	
+			<RelativeLayout
 				android:layout_height="wrap_content"
-				android:text="Show circle contour"
-				android:textSize="@dimen/font_size_small"
-				android:layout_alignParentStart="true"
-				android:id="@+id/setting_show_circle"
-				android:layout_marginHorizontal="@dimen/activity_horizontal_margin"/>
-
-			<ToggleButton
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:layout_alignParentEnd="true"
-				android:layout_marginHorizontal="@dimen/activity_horizontal_margin"
-				android:id="@+id/show_circle_checkbox"
-				android:layout_alignBaseline="@id/setting_show_circle"/>
-
-		</RelativeLayout>
-		
-		<View
-			android:layout_width="match_parent"
-			android:layout_height="1dp"
-			android:layout_marginHorizontal="@dimen/activity_horizontal_margin"
-			android:background="@android:color/black"/>
-
-		<RelativeLayout
-			android:layout_width="match_parent"
-			android:layout_height="wrap_content"
-			android:layout_marginVertical="@dimen/activity_vertical_margin">
+				android:layout_width="match_parent"
+				android:layout_marginVertical="@dimen/activity_vertical_margin"
+				android:id="@+id/radius_setting_layout">
 			
-			<NumberPicker
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:layout_alignParentEnd="true"
+				<TextView
+					android:layout_height="wrap_content"
+					android:layout_width="wrap_content"
+					android:text="Stopwatch radius"
+					android:id="@+id/setting_radius"
+					android:textSize="@dimen/font_size_small"
+					android:layout_alignParentStart="true"
+					android:layout_marginHorizontal="@dimen/activity_horizontal_margin"/>
+	
+				<TextView
+					android:layout_height="wrap_content"
+					android:layout_width="wrap_content"
+					android:text="*radius* px"
+					android:id="@+id/seekbar_value"
+					android:textSize="@dimen/font_size_xsmall"
+					android:layout_alignParentEnd="true"
+					android:layout_marginRight="@dimen/activity_horizontal_margin"/>
+	
+				<SeekBar
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:id="@+id/radius_seek_bar"
+					android:layout_toRightOf="@id/setting_radius"
+					android:layout_toLeftOf="@id/seekbar_value"
+					android:min="300"
+					android:max="800"
+					android:layout_marginLeft="@dimen/activity_horizontal_margin"/>
+	
+			</RelativeLayout>
+			
+			<View
+				android:layout_width="match_parent"
+				android:layout_height="1dp"
 				android:layout_marginHorizontal="@dimen/activity_horizontal_margin"
-				android:id="@+id/max_hour_picker"/>
-
-			<TextView
-				android:layout_width="wrap_content"
+				android:background="@android:color/black"/>
+	
+			<RelativeLayout
+				android:layout_width="match_parent"
 				android:layout_height="wrap_content"
-				android:text="Max hour display"
-				android:layout_centerVertical="true"
-				android:textSize="@dimen/font_size_small"
-				android:layout_alignParentLeft="true"
-				android:id="@+id/setting_max_hour"
-				android:layout_marginHorizontal="@dimen/activity_horizontal_margin"/>
+				android:layout_marginVertical="@dimen/activity_vertical_margin">
+	
+				<TextView
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:text="Show circle contour"
+					android:textSize="@dimen/font_size_small"
+					android:layout_alignParentStart="true"
+					android:id="@+id/setting_show_circle"
+					android:layout_marginHorizontal="@dimen/activity_horizontal_margin"/>
+	
+				<ToggleButton
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_alignParentEnd="true"
+					android:layout_marginHorizontal="@dimen/activity_horizontal_margin"
+					android:id="@+id/show_circle_checkbox"
+					android:layout_alignBaseline="@id/setting_show_circle"/>
+	
+			</RelativeLayout>
+			
+			<View
+				android:layout_width="match_parent"
+				android:layout_height="1dp"
+				android:layout_marginHorizontal="@dimen/activity_horizontal_margin"
+				android:background="@android:color/black"/>
+	
+			<RelativeLayout
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:layout_marginVertical="@dimen/activity_vertical_margin">
+				
+				<NumberPicker
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:layout_alignParentEnd="true"
+					android:layout_marginHorizontal="@dimen/activity_horizontal_margin"
+					android:id="@+id/max_hour_picker"/>
+	
+				<TextView
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:text="Max hour display"
+					android:layout_centerVertical="true"
+					android:textSize="@dimen/font_size_small"
+					android:layout_alignParentLeft="true"
+					android:id="@+id/setting_max_hour"
+					android:layout_marginHorizontal="@dimen/activity_horizontal_margin"/>
+	
+			</RelativeLayout>
+	
+			<View
+				android:layout_width="match_parent"
+				android:layout_height="1dp"
+				android:layout_marginHorizontal="@dimen/activity_horizontal_margin"
+				android:background="@android:color/black"/>
+	
+		</LinearLayout>
 
-		</RelativeLayout>
-
-		<View
-			android:layout_width="match_parent"
-			android:layout_height="1dp"
-			android:layout_marginHorizontal="@dimen/activity_horizontal_margin"
-			android:background="@android:color/black"/>
-
-	</LinearLayout>
-
+	</RelativeLayout>
 </RelativeLayout>

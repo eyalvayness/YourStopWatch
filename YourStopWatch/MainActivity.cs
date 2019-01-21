@@ -14,9 +14,6 @@ using SQLite;
 using System.ComponentModel;
 using Android.Content;
 using Android.Animation;
-using Microcharts;
-using SkiaSharp;
-using Microcharts.Droid;
 
 namespace YourStopWatch
 {
@@ -396,9 +393,9 @@ namespace YourStopWatch
         private void GrachicsLayoutOutput()
         {
             CommonPageOutput(graphicsLayout);
-            ChartView chartView = FindViewById<ChartView>(Resource.Id.chartView);
+            //ChartView chartView = FindViewById<ChartView>(Resource.Id.chartView);
 
-            Entry[] entries = new Entry[7];
+            //Entry[] entries = new Entry[7];
             float[] hourPerDay = new float[7];
             var db = new SQLiteConnection(dbPath);
             db.CreateTable<Time>();
@@ -424,16 +421,12 @@ namespace YourStopWatch
 
             for (int i = 0; i < 7; i++)
             {
-                entries[i] = new Entry(hourPerDay[i])
+                /*entries[i] = new Entry(hourPerDay[i])
                 {
                     Label = dayOfWeekNames[i],
                     ValueLabel = hourPerDay[i].ToString("n2")
-                };
+                };*/
             }
-
-            BarChart chart = new BarChart { Entries = entries };
-            chart.LabelTextSize = 30;
-            chartView.Chart = chart;
         }
 
         private void SettingsLayoutOutput()
