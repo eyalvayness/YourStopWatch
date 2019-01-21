@@ -14,6 +14,10 @@ using SQLite;
 using System.ComponentModel;
 using Android.Content;
 using Android.Animation;
+using OxyPlot.Xamarin.Android;
+using OxyPlot;
+using OxyPlot.Axes;
+using OxyPlot.Series;
 
 namespace YourStopWatch
 {
@@ -393,13 +397,41 @@ namespace YourStopWatch
         private void GrachicsLayoutOutput()
         {
             CommonPageOutput(graphicsLayout);
-            //ChartView chartView = FindViewById<ChartView>(Resource.Id.chartView);
-
-            //Entry[] entries = new Entry[7];
             float[] hourPerDay = new float[7];
+            PlotView plotView = FindViewById<PlotView>(Resource.Id.plotView);
+            PlotModel model = new PlotModel { Title = "This Week"};
+            model.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom, Minimum = 0, Maximum = 6, Title = "Day" , LabelFormatter = GetDayOfWeekName, IsZoomEnabled = false, IsPanEnabled = false });
+            model.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Minimum = 0, MinimumRange = 4, IsZoomEnabled = false, IsPanEnabled = false });
+            LineSeries series = new LineSeries { MarkerType = MarkerType.Circle, MarkerSize = 4, MarkerFill = OxyColors.Black};
+
             var db = new SQLiteConnection(dbPath);
             db.CreateTable<Time>();
             var table = db.Table<Time>();
+
+            foreach (Time t in table)
+            {
+                hourPerDay[(int)t.TimeSaved.DayOfWeek - 1] += t.TimeSaved.Hour + t.TimeSaved.Minute / 60f;
+                //if (Math.Abs(t.TimeSaved.DayOfWeek - DateTime.Now.DayOfWeek) == Math.Abs(t.TimeSaved.DayOfYear - DateTime.Now.DayOfYear))
+                //{
+                //    hourPerDay[(int)t.TimeSaved.DayOfWeek - 1] += t.TimeSaved.Hour + t.TimeSaved.Minute / 60f;
+                //}
+            }
+
+            for (int i = 0; i < 7; i++)
+            {
+                series.Points.Add(new DataPoint(i, hourPerDay[i]));
+            }
+            model.Series.Add(series);
+            plotView.Model = model;
+        }
+
+        private void SettingsLayoutOutput()
+        {
+            CommonPageOutput(settingsLayout);
+        }
+
+        private string GetDayOfWeekName(double input)
+        {
             string[] dayOfWeekNames = new string[]
             {
                 "Monday",
@@ -411,27 +443,7 @@ namespace YourStopWatch
                 "Sunday"
             };
 
-            foreach (Time t in table)
-            {
-                if (Math.Abs(t.TimeSaved.DayOfWeek - DateTime.Now.DayOfWeek) == Math.Abs(t.TimeSaved.DayOfYear - DateTime.Now.DayOfYear))
-                {
-                    hourPerDay[(int)t.TimeSaved.DayOfWeek - 1] += t.TimeSaved.Hour + t.TimeSaved.Minute / 60f;
-                }
-            }
-
-            for (int i = 0; i < 7; i++)
-            {
-                /*entries[i] = new Entry(hourPerDay[i])
-                {
-                    Label = dayOfWeekNames[i],
-                    ValueLabel = hourPerDay[i].ToString("n2")
-                };*/
-            }
-        }
-
-        private void SettingsLayoutOutput()
-        {
-            CommonPageOutput(settingsLayout);
+            return dayOfWeekNames[(int)input];
         }
 
         private void SetButtonsListeners(Button startButton, Button stopButton, Button pauseButton)

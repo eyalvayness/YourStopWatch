@@ -5,11 +5,25 @@
     xmlns:tools="http://schemas.android.com/tools"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent">
+
+	<android.support.design.widget.BottomNavigationView
+        android:id="@+id/fakeNavList"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="0dp"
+        android:layout_marginStart="0dp"
+		android:minWidth="25px"
+		android:minHeight="25px"
+		app:elevation="6dp"
+        android:background="?android:attr/windowBackground"
+        android:layout_alignParentBottom="true"
+        app:menu="@menu/navigation" />
 	
 	<RelativeLayout
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
-		android:id="@+id/listMainLayout">zad
+		android:layout_above="@id/fakeNavList"
+		android:id="@+id/listMainLayout">
 
 		<TextView
 			android:layout_width="wrap_content"

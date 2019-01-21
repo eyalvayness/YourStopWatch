@@ -5,10 +5,24 @@
     xmlns:tools="http://schemas.android.com/tools"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent">
+
+	<android.support.design.widget.BottomNavigationView
+        android:id="@+id/fakeNavGraphics"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="0dp"
+        android:layout_marginStart="0dp"
+		android:minWidth="25px"
+		android:minHeight="25px"
+		app:elevation="6dp"
+        android:background="?android:attr/windowBackground"
+        android:layout_alignParentBottom="true"
+        app:menu="@menu/navigation" />
 	
 	<RelativeLayout
 	    android:layout_width="match_parent"
 	    android:layout_height="match_parent"
+		android:layout_above="@id/fakeNavGraphics"
 		android:id="@+id/graphicsMainLayout">
 	
 		<TextView
@@ -20,5 +34,13 @@
 			android:layout_marginVertical="@dimen/activity_vertical_margin"
 			android:textSize="@dimen/font_size_large"/>
 	
+		<OxyPlot.Xamarin.Android.PlotView
+			android:layout_width="match_parent"
+			android:layout_height="match_parent"
+			android:layout_below="@id/graphicsTitle"
+			android:layout_marginVertical="@dimen/activity_vertical_margin"
+			android:layout_marginHorizontal="@dimen/activity_horizontal_margin"
+			android:id="@+id/plotView"/>
+
 	</RelativeLayout>
 </RelativeLayout>
