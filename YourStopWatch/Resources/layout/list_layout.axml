@@ -35,7 +35,6 @@
 			android:textSize="@dimen/font_size_large"/>
 	
 		<ScrollView
-			android:id="@+id/scroller"
 			android:layout_below="@id/listTitle"
 	        android:layout_width="match_parent"
 	        android:layout_height="match_parent">

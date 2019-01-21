@@ -18,6 +18,7 @@ using OxyPlot.Xamarin.Android;
 using OxyPlot;
 using OxyPlot.Axes;
 using OxyPlot.Series;
+using System.Collections.Generic;
 
 namespace YourStopWatch
 {
@@ -38,8 +39,8 @@ namespace YourStopWatch
         TextView timerView;
         const string dbName = "SavedTimesDataBase.db3", settingsName = "AppSettings";
         readonly static string dbFolder = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), dbPath = System.IO.Path.Combine(dbFolder, dbName);
-        bool showCircle;
-        int milli = 0, sec = 0, min = 0, hour = 0, maxHour = 6, bitmapLength = 500;
+        bool showCircle, areSettingsUnlocked;
+        int milli = 0, sec = 0, min = 0, hour = 0, maxHour = 6, bitmapLength = 500, maxHourWeekly;
         const int maxSec = 60, maxMin = 60;
         float secOffset, minOffset, hourOffset;
 
@@ -164,6 +165,8 @@ namespace YourStopWatch
             min = settings.GetInt("timerMinutes", 0);
             hour = settings.GetInt("timerHours", 0);
             showCircle = settings.GetBoolean("showCircle", true);
+            areSettingsUnlocked = settings.GetBoolean("areSettingsUnlocked", true);
+            maxHourWeekly = settings.GetInt("maxHourWeekly", 14);
 
             secOffset = bitmapLength / 5f;
             minOffset = bitmapLength / 10f;
@@ -180,11 +183,6 @@ namespace YourStopWatch
             settings.GetInt("refMinutes", 0),
             settings.GetInt("refHours", 0));
 
-            if (settings.GetInt("currentMonth", DateTime.Now.Month) != DateTime.Now.Month)
-            {
-                var db = new SQLiteConnection(dbPath);
-            }
-
             return wasTimerRunning;
         }
 
@@ -197,7 +195,7 @@ namespace YourStopWatch
             settings.PutInt("timerSeconds", sec);
             settings.PutInt("timerMinutes", min);
             settings.PutInt("timerHours", hour);
-            settings.PutInt("currentMonth", DateTime.Now.Month);
+            settings.PutInt("maxHourWeekly", maxHourWeekly);
 
             if (timer != null && keepActivity)
             {
@@ -210,6 +208,7 @@ namespace YourStopWatch
             else
                 settings.PutBoolean("isTimerRunning", false);
 
+            settings.PutBoolean("areSettingsUnlocked", areSettingsUnlocked);
             settings.PutBoolean("showCircle", showCircle);
             settings.Commit();
         }
@@ -254,7 +253,7 @@ namespace YourStopWatch
 
             var db = new SQLiteConnection(dbPath);
             db.CreateTable<Time>();
-            var table = db.Table<Time>();
+            var table = db.Table<Time>().OrderBy(t => t.TimeSaved);
 
             foreach (var t in table)
                 AddTimeToOutputList(t, new SQLiteConnection(dbPath));
@@ -312,6 +311,29 @@ namespace YourStopWatch
         {
             RelativeLayout layout = (RelativeLayout)((LayoutInflater)BaseContext.GetSystemService(Context.LayoutInflaterService)).Inflate(Resource.Layout.graphics_layout, null);
             TextView title = layout.FindViewById<TextView>(Resource.Id.graphicsTitle);
+            Spinner spinner = layout.FindViewById<Spinner>(Resource.Id.spinner_dropdown);
+
+            var adapter = new ArrayAdapter<string>(this, Android.Resource.Layout.SimpleSpinnerItem, new string[] { "This Week", "This Month", "This Year" });
+            adapter.SetDropDownViewResource(Android.Resource.Layout.SimpleSpinnerDropDownItem);
+            spinner.Adapter = adapter;
+            spinner.ItemSelected += (s, e) =>
+            {
+                string choosed = e.Parent.GetItemAtPosition(e.Position).ToString();
+                switch (choosed)
+                {
+                    case "This Week":
+                        UpdateGraphics(GraphicTimeLine.Week);
+                        break;
+                    case "This Month":
+                        UpdateGraphics(GraphicTimeLine.Month);
+                        break;
+                    case "This Year":
+                        UpdateGraphics(GraphicTimeLine.Year);
+                        break;
+                    default:
+                        break;
+                }
+            };
             return layout;
         }
 
@@ -322,6 +344,36 @@ namespace YourStopWatch
             TextView radiusSBValue = layout.FindViewById<TextView>(Resource.Id.seekbar_value);
             ToggleButton toggleBoxShowCircle = layout.FindViewById<ToggleButton>(Resource.Id.show_circle_checkbox);
             NumberPicker maxHourPicker = layout.FindViewById<NumberPicker>(Resource.Id.max_hour_picker);
+            EditText maxWeeklyEdit = layout.FindViewById<EditText>(Resource.Id.max_weekly_edit_text);
+            RadioButton lockParams = layout.FindViewById<RadioButton>(Resource.Id.lock_params);
+
+            lockParams.Checked = !areSettingsUnlocked;
+            radiusSB.Enabled = areSettingsUnlocked;
+            toggleBoxShowCircle.Enabled = areSettingsUnlocked;
+            maxHourPicker.Enabled = areSettingsUnlocked;
+            maxWeeklyEdit.Enabled = areSettingsUnlocked;
+
+            lockParams.CheckedChange += delegate
+            {
+                areSettingsUnlocked = !lockParams.Checked;
+                radiusSB.Enabled = areSettingsUnlocked;
+                toggleBoxShowCircle.Enabled = areSettingsUnlocked;
+                maxHourPicker.Enabled = areSettingsUnlocked;
+                maxWeeklyEdit.Enabled = areSettingsUnlocked;
+            };
+
+            maxWeeklyEdit.Text = maxHourWeekly.ToString();
+            maxWeeklyEdit.TextChanged += delegate 
+            {
+                try
+                {
+                    maxHourWeekly = int.Parse(maxWeeklyEdit.Text);
+                }
+                catch (Exception)
+                {
+                    return;
+                }
+            };
 
             maxHourPicker.MinValue = 1;
             maxHourPicker.MaxValue = 8;
@@ -397,31 +449,105 @@ namespace YourStopWatch
         private void GrachicsLayoutOutput()
         {
             CommonPageOutput(graphicsLayout);
-            float[] hourPerDay = new float[7];
-            PlotView plotView = FindViewById<PlotView>(Resource.Id.plotView);
-            PlotModel model = new PlotModel { Title = "This Week"};
-            model.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom, Minimum = 0, Maximum = 6, Title = "Day" , LabelFormatter = GetDayOfWeekName, IsZoomEnabled = false, IsPanEnabled = false });
-            model.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Minimum = 0, MinimumRange = 4, IsZoomEnabled = false, IsPanEnabled = false });
-            LineSeries series = new LineSeries { MarkerType = MarkerType.Circle, MarkerSize = 4, MarkerFill = OxyColors.Black};
+            Spinner spinner = FindViewById<Spinner>(Resource.Id.spinner_dropdown);
+            switch (spinner.SelectedItem.ToString())
+            {
+                case "This Week":
+                    UpdateGraphics(GraphicTimeLine.Week);
+                    break;
+                case "This Month":
+                    UpdateGraphics(GraphicTimeLine.Month);
+                    break;
+                case "This Year":
+                    UpdateGraphics(GraphicTimeLine.Year);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        private void UpdateGraphics(GraphicTimeLine timeLine)
+        {
+            float[] hourPerSubDiv = new float[(int)timeLine];
+            PlotView plotView = graphicsLayout.FindViewById<PlotView>(Resource.Id.plotView);
+            PlotModel model = new PlotModel();
+
+            DateTimeAxis dateTimeAxis = new DateTimeAxis { Position = AxisPosition.Bottom, Minimum = -0.5, Maximum = (int)timeLine - 0.5, IsZoomEnabled = false, IsPanEnabled = false, IsAxisVisible = false };
+            CategoryAxis categoryAxis = new CategoryAxis { Position = AxisPosition.Bottom, LabelFormatter = GetCorrectLabelFormatting(timeLine), IsZoomEnabled = false, IsPanEnabled = false };
+            LinearAxis linearAxis1 = new LinearAxis { Position = AxisPosition.Left, Minimum = 0, MinimumRange = 4, IsZoomEnabled = false, IsPanEnabled = false};
+
+            LineSeries series1 = new LineSeries { MarkerSize = 0, Color = OxyColors.Red };
+            ColumnSeries series2 = new ColumnSeries { FillColor = OxyColors.Green };
+            ColumnSeries todaySeries = new ColumnSeries { FillColor = OxyColors.Orange };
 
             var db = new SQLiteConnection(dbPath);
             db.CreateTable<Time>();
             var table = db.Table<Time>();
 
-            foreach (Time t in table)
+            if (timeLine == GraphicTimeLine.Week)
             {
-                hourPerDay[(int)t.TimeSaved.DayOfWeek - 1] += t.TimeSaved.Hour + t.TimeSaved.Minute / 60f;
-                //if (Math.Abs(t.TimeSaved.DayOfWeek - DateTime.Now.DayOfWeek) == Math.Abs(t.TimeSaved.DayOfYear - DateTime.Now.DayOfYear))
-                //{
-                //    hourPerDay[(int)t.TimeSaved.DayOfWeek - 1] += t.TimeSaved.Hour + t.TimeSaved.Minute / 60f;
-                //}
+                foreach (Time t in table)
+                {
+                    if (t.TimeSaved.Year == DateTime.Now.Year && Math.Abs(t.TimeSaved.DayOfWeek - DateTime.Now.DayOfWeek) == Math.Abs(t.TimeSaved.DayOfYear - DateTime.Now.DayOfYear))
+                        hourPerSubDiv[(int)t.TimeSaved.DayOfWeek - 1] += t.TimeSaved.Hour + t.TimeSaved.Minute / 60f;
+                }
+
+                for (int i = 0; i < (int)timeLine; i++)
+                {
+                    if (i + 1 == (int)DateTime.Now.DayOfWeek)
+                        todaySeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
+                    else
+                        series2.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
+                }
+                series1.Points.Add(new DataPoint(-0.5, maxHourWeekly / 7f));
+                series1.Points.Add(new DataPoint((int)timeLine - 0.5, maxHourWeekly / 7f));
+            }
+            else if (timeLine == GraphicTimeLine.Month)
+            {
+                foreach (Time t in table)
+                {
+                    if (t.TimeSaved.Year == DateTime.Now.Year && t.TimeSaved.Month == DateTime.Now.Month)
+                        hourPerSubDiv[(int)Math.Floor(t.TimeSaved.Day / 7.0)] += t.TimeSaved.Hour + t.TimeSaved.Minute / 60f;
+                }
+
+                for (int i = 0; i < (int)timeLine; i++)
+                {
+                    if (i + 1 == (int)Math.Floor(DateTime.Now.Day / 7.0))
+                        todaySeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
+                    else
+                        series2.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
+                }
+                series1.Points.Add(new DataPoint(-0.5, maxHourWeekly));
+                series1.Points.Add(new DataPoint((int)timeLine - 0.5, maxHourWeekly));
+            }
+            else if (timeLine == GraphicTimeLine.Year)
+            {
+                foreach (Time t in table)
+                {
+                    if (t.TimeSaved.Year == DateTime.Now.Year)
+                        hourPerSubDiv[t.TimeSaved.Month - 1] += t.TimeSaved.Hour + t.TimeSaved.Minute / 60f;
+                }
+
+                for (int i = 0; i < (int)timeLine; i++)
+                {
+                    if (i + 1 == DateTime.Now.Month)
+                        todaySeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
+                    else
+                        series2.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
+                }
+                series1.Points.Add(new DataPoint(-0.5, maxHourWeekly * 5));
+                series1.Points.Add(new DataPoint((int)timeLine - 0.5, maxHourWeekly * 5));
             }
 
-            for (int i = 0; i < 7; i++)
-            {
-                series.Points.Add(new DataPoint(i, hourPerDay[i]));
-            }
-            model.Series.Add(series);
+
+            model.Axes.Add(categoryAxis);
+            model.Axes.Add(linearAxis1);
+            model.Series.Add(series2);
+            model.Series.Add(todaySeries);
+
+            model.Axes.Add(dateTimeAxis);
+            model.Series.Add(series1);
+
             plotView.Model = model;
         }
 
@@ -430,20 +556,37 @@ namespace YourStopWatch
             CommonPageOutput(settingsLayout);
         }
 
+        private Func<double, string> GetCorrectLabelFormatting(GraphicTimeLine timeLine)
+        {
+            switch (timeLine)
+            {
+                case GraphicTimeLine.Week:
+                    return GetDayOfWeekName;
+                case GraphicTimeLine.Month:
+                    return GetWeekNumber;
+                case GraphicTimeLine.Year:
+                    return GetMonthName;
+                default:
+                    return null;
+            }
+        }
+
         private string GetDayOfWeekName(double input)
         {
-            string[] dayOfWeekNames = new string[]
-            {
-                "Monday",
-                "Tuesday",
-                "Wednesday",
-                "Thursday",
-                "Friday",
-                "Saturday",
-                "Sunday"
-            };
-
+            string[] dayOfWeekNames = new string[] { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
             return dayOfWeekNames[(int)input];
+        }
+
+        private string GetWeekNumber(double input)
+        {
+            string[] weekNumber = new string[] { "Week #1", "Week #2", "Week #3", "Week #4", "Week #5"};
+            return weekNumber[(int)input];
+        }
+
+        private string GetMonthName(double input)
+        {
+            string[] monthName = new string[] { "Jan", "Feb", "Mar", "Avr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+            return monthName[(int)input];
         }
 
         private void SetButtonsListeners(Button startButton, Button stopButton, Button pauseButton)
@@ -611,6 +754,13 @@ namespace YourStopWatch
             }
             return false;
         }
+    }
+    
+    public enum GraphicTimeLine
+    {
+        Week = 7,
+        Month = 5,
+        Year = 12
     }
 
     public enum ButtonsState
