@@ -101,7 +101,7 @@
 						android:id="@+id/setting_show_circle"
 						android:layout_marginHorizontal="@dimen/activity_horizontal_margin"/>
 	
-					<ToggleButton
+					<Switch
 						android:layout_width="wrap_content"
 						android:layout_height="wrap_content"
 						android:layout_alignParentEnd="true"
@@ -164,10 +164,33 @@
 						android:layout_width="wrap_content"
 						android:layout_height="wrap_content"
 						android:text="Max hour per week"
-						android:layout_centerVertical="true"
+						android:layout_alignBaseline="@id/max_weekly_edit_text"
 						android:textSize="@dimen/font_size_small"
 						android:layout_alignParentLeft="true"
 						android:id="@+id/setting_weekly_hour"
+						android:layout_marginBottom="@dimen/activity_vertical_margin"
+						android:layout_marginHorizontal="@dimen/activity_horizontal_margin"/>
+	
+
+					<TextView
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:text="Show average line time"
+						android:textSize="@dimen/font_size_small"
+						android:layout_alignParentLeft="true"
+						android:layout_below="@id/setting_weekly_hour"
+						android:layout_alignLeft="@id/setting_weekly_hour"
+						android:id="@+id/setting_show_average_hour"
+						android:layout_marginTop="@dimen/activity_vertical_margin"
+						android:layout_marginHorizontal="@dimen/activity_horizontal_margin"/>
+					
+					<Switch
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:layout_alignParentEnd="true"
+						android:id="@+id/show_average_hour"
+						android:layout_below="@id/max_weekly_edit_text"
+						android:layout_alignBaseline="@id/setting_show_average_hour"
 						android:layout_marginHorizontal="@dimen/activity_horizontal_margin"/>
 	
 				</RelativeLayout>
@@ -183,7 +206,7 @@
 					android:layout_height="wrap_content"
 					android:layout_marginVertical="@dimen/activity_vertical_margin">
 					
-					<RadioButton
+					<Switch
 						android:layout_width="wrap_content"
 						android:layout_height="wrap_content"
 						android:layout_alignParentEnd="true"

@@ -2494,26 +2494,8 @@ namespace YourStopWatch
 			// aapt resource value: 0x7f020053
 			public const int avd_hide_password = 2130837587;
 			
-			// aapt resource value: 0x7f020072
-			public const int avd_hide_password_1 = 2130837618;
-			
-			// aapt resource value: 0x7f020073
-			public const int avd_hide_password_2 = 2130837619;
-			
-			// aapt resource value: 0x7f020074
-			public const int avd_hide_password_3 = 2130837620;
-			
 			// aapt resource value: 0x7f020054
 			public const int avd_show_password = 2130837588;
-			
-			// aapt resource value: 0x7f020075
-			public const int avd_show_password_1 = 2130837621;
-			
-			// aapt resource value: 0x7f020076
-			public const int avd_show_password_2 = 2130837622;
-			
-			// aapt resource value: 0x7f020077
-			public const int avd_show_password_3 = 2130837623;
 			
 			// aapt resource value: 0x7f020055
 			public const int design_bottom_navigation_item_background = 2130837589;
@@ -2723,8 +2705,8 @@ namespace YourStopWatch
 			// aapt resource value: 0x7f08008c
 			public const int bottomNavigation = 2131230860;
 			
-			// aapt resource value: 0x7f0800d5
-			public const int buttonLayout = 2131230933;
+			// aapt resource value: 0x7f0800d7
+			public const int buttonLayout = 2131230935;
 			
 			// aapt resource value: 0x7f080063
 			public const int buttonPanel = 2131230819;
@@ -2831,8 +2813,8 @@ namespace YourStopWatch
 			// aapt resource value: 0x7f0800bf
 			public const int fakeNavSettings = 2131230911;
 			
-			// aapt resource value: 0x7f0800d0
-			public const int fakeNavStopwatch = 2131230928;
+			// aapt resource value: 0x7f0800d2
+			public const int fakeNavStopwatch = 2131230930;
 			
 			// aapt resource value: 0x7f080050
 			public const int fill = 2131230800;
@@ -2879,8 +2861,8 @@ namespace YourStopWatch
 			// aapt resource value: 0x7f08005f
 			public const int image = 2131230815;
 			
-			// aapt resource value: 0x7f0800d3
-			public const int imgView = 2131230931;
+			// aapt resource value: 0x7f0800d5
+			public const int imgView = 2131230933;
 			
 			// aapt resource value: 0x7f0800b3
 			public const int info = 2131230899;
@@ -2921,11 +2903,11 @@ namespace YourStopWatch
 			// aapt resource value: 0x7f080061
 			public const int list_item = 2131230817;
 			
-			// aapt resource value: 0x7f0800cc
-			public const int lock_params = 2131230924;
+			// aapt resource value: 0x7f0800ce
+			public const int lock_params = 2131230926;
 			
-			// aapt resource value: 0x7f0800db
-			public const int masked = 2131230939;
+			// aapt resource value: 0x7f0800dd
+			public const int masked = 2131230941;
 			
 			// aapt resource value: 0x7f0800c8
 			public const int max_hour_picker = 2131230920;
@@ -2936,8 +2918,8 @@ namespace YourStopWatch
 			// aapt resource value: 0x7f0800ac
 			public const int media_actions = 2131230892;
 			
-			// aapt resource value: 0x7f0800d9
-			public const int message = 2131230937;
+			// aapt resource value: 0x7f0800db
+			public const int message = 2131230939;
 			
 			// aapt resource value: 0x7f080031
 			public const int middle = 2131230769;
@@ -2948,20 +2930,20 @@ namespace YourStopWatch
 			// aapt resource value: 0x7f080028
 			public const int multiply = 2131230760;
 			
-			// aapt resource value: 0x7f0800de
-			public const int navigation_graphics = 2131230942;
+			// aapt resource value: 0x7f0800e0
+			public const int navigation_graphics = 2131230944;
 			
 			// aapt resource value: 0x7f080094
 			public const int navigation_header_container = 2131230868;
 			
-			// aapt resource value: 0x7f0800dd
-			public const int navigation_list = 2131230941;
-			
 			// aapt resource value: 0x7f0800df
-			public const int navigation_settings = 2131230943;
+			public const int navigation_list = 2131230943;
 			
-			// aapt resource value: 0x7f0800dc
-			public const int navigation_stopwatch = 2131230940;
+			// aapt resource value: 0x7f0800e1
+			public const int navigation_settings = 2131230945;
+			
+			// aapt resource value: 0x7f0800de
+			public const int navigation_stopwatch = 2131230942;
 			
 			// aapt resource value: 0x7f08003b
 			public const int never = 2131230779;
@@ -2981,8 +2963,8 @@ namespace YourStopWatch
 			// aapt resource value: 0x7f0800ae
 			public const int notification_main_column_container = 2131230894;
 			
-			// aapt resource value: 0x7f0800cf
-			public const int outText = 2131230927;
+			// aapt resource value: 0x7f0800d1
+			public const int outText = 2131230929;
 			
 			// aapt resource value: 0x7f0800a2
 			public const int outputContainer = 2131230882;
@@ -2996,8 +2978,8 @@ namespace YourStopWatch
 			// aapt resource value: 0x7f08000b
 			public const int parent_matrix = 2131230731;
 			
-			// aapt resource value: 0x7f0800d7
-			public const int pauseButton = 2131230935;
+			// aapt resource value: 0x7f0800d9
+			public const int pauseButton = 2131230937;
 			
 			// aapt resource value: 0x7f08004d
 			public const int pin = 2131230797;
@@ -3020,8 +3002,8 @@ namespace YourStopWatch
 			// aapt resource value: 0x7f0800c3
 			public const int radius_setting_layout = 2131230915;
 			
-			// aapt resource value: 0x7f0800ce
-			public const int removeButton = 2131230926;
+			// aapt resource value: 0x7f0800d0
+			public const int removeButton = 2131230928;
 			
 			// aapt resource value: 0x7f0800a5
 			public const int resetAllButton = 2131230885;
@@ -3101,14 +3083,17 @@ namespace YourStopWatch
 			// aapt resource value: 0x7f08008a
 			public const int select_dialog_listview = 2131230858;
 			
-			// aapt resource value: 0x7f0800cd
-			public const int setting_lock_params = 2131230925;
+			// aapt resource value: 0x7f0800cf
+			public const int setting_lock_params = 2131230927;
 			
 			// aapt resource value: 0x7f0800c9
 			public const int setting_max_hour = 2131230921;
 			
 			// aapt resource value: 0x7f0800c4
 			public const int setting_radius = 2131230916;
+			
+			// aapt resource value: 0x7f0800cc
+			public const int setting_show_average_hour = 2131230924;
 			
 			// aapt resource value: 0x7f0800c6
 			public const int setting_show_circle = 2131230918;
@@ -3136,6 +3121,9 @@ namespace YourStopWatch
 			
 			// aapt resource value: 0x7f080025
 			public const int showTitle = 2131230757;
+			
+			// aapt resource value: 0x7f0800cd
+			public const int show_average_hour = 2131230925;
 			
 			// aapt resource value: 0x7f0800c7
 			public const int show_circle_checkbox = 2131230919;
@@ -3176,20 +3164,20 @@ namespace YourStopWatch
 			// aapt resource value: 0x7f08004b
 			public const int start = 2131230795;
 			
-			// aapt resource value: 0x7f0800d6
-			public const int startButton = 2131230934;
+			// aapt resource value: 0x7f0800d8
+			public const int startButton = 2131230936;
 			
 			// aapt resource value: 0x7f0800ab
 			public const int status_bar_latest_event_content = 2131230891;
 			
-			// aapt resource value: 0x7f0800d8
-			public const int stopButton = 2131230936;
+			// aapt resource value: 0x7f0800da
+			public const int stopButton = 2131230938;
 			
-			// aapt resource value: 0x7f0800d1
-			public const int stopwatchMainLayout = 2131230929;
+			// aapt resource value: 0x7f0800d3
+			public const int stopwatchMainLayout = 2131230931;
 			
-			// aapt resource value: 0x7f0800d2
-			public const int stopwatchTitle = 2131230930;
+			// aapt resource value: 0x7f0800d4
+			public const int stopwatchTitle = 2131230932;
 			
 			// aapt resource value: 0x7f080076
 			public const int submenuarrow = 2131230838;
@@ -3230,8 +3218,8 @@ namespace YourStopWatch
 			// aapt resource value: 0x7f0800b1
 			public const int time = 2131230897;
 			
-			// aapt resource value: 0x7f0800d4
-			public const int timerView = 2131230932;
+			// aapt resource value: 0x7f0800d6
+			public const int timerView = 2131230934;
 			
 			// aapt resource value: 0x7f08001c
 			public const int title = 2131230748;
@@ -3278,8 +3266,8 @@ namespace YourStopWatch
 			// aapt resource value: 0x7f080016
 			public const int view_offset_helper = 2131230742;
 			
-			// aapt resource value: 0x7f0800da
-			public const int visible = 2131230938;
+			// aapt resource value: 0x7f0800dc
+			public const int visible = 2131230940;
 			
 			// aapt resource value: 0x7f08003c
 			public const int withText = 2131230780;

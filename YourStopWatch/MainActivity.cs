@@ -39,7 +39,7 @@ namespace YourStopWatch
         TextView timerView;
         const string dbName = "SavedTimesDataBase.db3", settingsName = "AppSettings";
         readonly static string dbFolder = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), dbPath = System.IO.Path.Combine(dbFolder, dbName);
-        bool showCircle, areSettingsUnlocked;
+        bool showCircle, areSettingsUnlocked, showAverageHour;
         int milli = 0, sec = 0, min = 0, hour = 0, maxHour = 6, bitmapLength = 500, maxHourWeekly;
         const int maxSec = 60, maxMin = 60;
         float secOffset, minOffset, hourOffset;
@@ -65,7 +65,6 @@ namespace YourStopWatch
             StopWatchLayoutOutput();
 
             ToggleButtons(ButtonsState.End);
-
         }
 
         protected override void OnResume()
@@ -166,6 +165,7 @@ namespace YourStopWatch
             hour = settings.GetInt("timerHours", 0);
             showCircle = settings.GetBoolean("showCircle", true);
             areSettingsUnlocked = settings.GetBoolean("areSettingsUnlocked", true);
+            showAverageHour = settings.GetBoolean("showAverageHour", true);
             maxHourWeekly = settings.GetInt("maxHourWeekly", 14);
 
             secOffset = bitmapLength / 5f;
@@ -208,6 +208,7 @@ namespace YourStopWatch
             else
                 settings.PutBoolean("isTimerRunning", false);
 
+            settings.PutBoolean("showAverageHour", showAverageHour);
             settings.PutBoolean("areSettingsUnlocked", areSettingsUnlocked);
             settings.PutBoolean("showCircle", showCircle);
             settings.Commit();
@@ -251,12 +252,7 @@ namespace YourStopWatch
             Button resetAllButton = layout.FindViewById<Button>(Resource.Id.resetAllButton);
             Button manualAdd = layout.FindViewById<Button>(Resource.Id.directAdd);
 
-            var db = new SQLiteConnection(dbPath);
-            db.CreateTable<Time>();
-            var table = db.Table<Time>().OrderBy(t => t.TimeSaved);
-
-            foreach (var t in table)
-                AddTimeToOutputList(t, new SQLiteConnection(dbPath));
+            OutputListLayoutReset();
 
             manualAdd.Click += delegate
             {
@@ -275,12 +271,12 @@ namespace YourStopWatch
                     timeBuilder.SetNegativeButton("Cancel", delegate { return; });
                     timeBuilder.SetPositiveButton("Save Time", delegate 
                     {
-                        Time t = new Time
-                        {
-                            TimeSaved = new DateTime(datePicker.Year, datePicker.Month + 1, datePicker.DayOfMonth, timePicker.Hour, timePicker.Minute, 0)
-                        };
+                        Time t = new Time { TimeSaved = new DateTime(datePicker.Year, datePicker.Month + 1, datePicker.DayOfMonth, timePicker.Hour, timePicker.Minute, 0) };
+                        var db = new SQLiteConnection(dbPath);
+                        db.CreateTable<Time>();
                         db.Insert(t);
-                        AddTimeToOutputList(t, db);
+                        db.Close();
+                        OutputListLayoutReset();
                     });
                     timeBuilder.Create().Show();
                 });
@@ -293,8 +289,10 @@ namespace YourStopWatch
                 alert.SetTitle("Confirmation");
                 alert.SetMessage("Do you really want to permanently delete all of the recorded times ?");
 
-                alert.SetPositiveButton("YES", delegate 
+                alert.SetPositiveButton("YES", delegate
                 {
+                    var db = new SQLiteConnection(dbPath);
+                    db.CreateTable<Time>();
                     db.DropTable<Time>();
                     outputContainer.RemoveAllViews();
                     resetAllButton.Enabled = false;
@@ -341,24 +339,33 @@ namespace YourStopWatch
             RelativeLayout layout = (RelativeLayout)((LayoutInflater)BaseContext.GetSystemService(Context.LayoutInflaterService)).Inflate(Resource.Layout.settings_layout, null);
             SeekBar radiusSB = layout.FindViewById<SeekBar>(Resource.Id.radius_seek_bar);
             TextView radiusSBValue = layout.FindViewById<TextView>(Resource.Id.seekbar_value);
-            ToggleButton toggleBoxShowCircle = layout.FindViewById<ToggleButton>(Resource.Id.show_circle_checkbox);
+            Switch switchBoxShowCircle = layout.FindViewById<Switch>(Resource.Id.show_circle_checkbox);
             NumberPicker maxHourPicker = layout.FindViewById<NumberPicker>(Resource.Id.max_hour_picker);
             EditText maxWeeklyEdit = layout.FindViewById<EditText>(Resource.Id.max_weekly_edit_text);
-            RadioButton lockParams = layout.FindViewById<RadioButton>(Resource.Id.lock_params);
+            Switch switchShowAverage = layout.FindViewById<Switch>(Resource.Id.show_average_hour);
+            Switch lockParams = layout.FindViewById<Switch>(Resource.Id.lock_params);
 
             lockParams.Checked = !areSettingsUnlocked;
             radiusSB.Enabled = areSettingsUnlocked;
-            toggleBoxShowCircle.Enabled = areSettingsUnlocked;
+            switchBoxShowCircle.Enabled = areSettingsUnlocked;
             maxHourPicker.Enabled = areSettingsUnlocked;
             maxWeeklyEdit.Enabled = areSettingsUnlocked;
+            switchShowAverage.Enabled = areSettingsUnlocked;
 
             lockParams.CheckedChange += delegate
             {
                 areSettingsUnlocked = !lockParams.Checked;
                 radiusSB.Enabled = areSettingsUnlocked;
-                toggleBoxShowCircle.Enabled = areSettingsUnlocked;
+                switchShowAverage.Enabled = areSettingsUnlocked;
+                switchBoxShowCircle.Enabled = areSettingsUnlocked;
                 maxHourPicker.Enabled = areSettingsUnlocked;
                 maxWeeklyEdit.Enabled = areSettingsUnlocked;
+            };
+
+            switchShowAverage.Checked = showAverageHour;
+            switchShowAverage.CheckedChange += delegate
+            {
+                showAverageHour = switchShowAverage.Checked;
             };
 
             maxWeeklyEdit.Text = maxHourWeekly.ToString();
@@ -393,12 +400,12 @@ namespace YourStopWatch
                 minOffset = bitmapLength / 10f;
             };
 
-            toggleBoxShowCircle.TextOff = "Off";
-            toggleBoxShowCircle.TextOn = "On";
-            toggleBoxShowCircle.Checked = showCircle;
-            toggleBoxShowCircle.CheckedChange += delegate
+            switchBoxShowCircle.TextOff = "Off";
+            switchBoxShowCircle.TextOn = "On";
+            switchBoxShowCircle.Checked = showCircle;
+            switchBoxShowCircle.CheckedChange += delegate
             {
-                showCircle = toggleBoxShowCircle.Checked;
+                showCircle = switchBoxShowCircle.Checked;
             };
 
             return layout;
@@ -448,7 +455,16 @@ namespace YourStopWatch
         private void GrachicsLayoutOutput()
         {
             CommonPageOutput(graphicsLayout);
-            Spinner spinner = FindViewById<Spinner>(Resource.Id.spinner_dropdown);
+            UpdateGraphicsLayout();
+        }
+
+        private void UpdateGraphicsLayout()
+        {
+            if (graphicsLayout == null)
+                return;
+            Spinner spinner = graphicsLayout.FindViewById<Spinner>(Resource.Id.spinner_dropdown);
+            if (spinner == null)
+                return;
             switch (spinner.SelectedItem.ToString())
             {
                 case "This Week":
@@ -504,12 +520,14 @@ namespace YourStopWatch
                         subDivSeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
                     }
                 }
-                meanSeries.Points.Add(new DataPoint(-0.5, maxHourWeekly / 7f));
-                meanSeries.Points.Add(new DataPoint((int)timeLine - 0.5, maxHourWeekly / 7f));
+                if (showAverageHour)
+                {
+                    meanSeries.Points.Add(new DataPoint(-0.5, maxHourWeekly / 7f));
+                    meanSeries.Points.Add(new DataPoint((int)timeLine - 0.5, maxHourWeekly / 7f));
+                }
             }
             else if (timeLine == GraphicTimeLine.Month)
             {
-                //DateTime endOfWeek = DateTime.Now.DayOfWeek != 0 ? DateTime.Now.AddDays(7 - (int)DateTime.Now.DayOfWeek) : DateTime.Now;
                 foreach (Time t in table)
                 {
                     if (GetWeekDiference(DateTime.Now, t.TimeSaved) < 4)
@@ -529,9 +547,11 @@ namespace YourStopWatch
                         subDivSeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
                     }
                 }
-
-                meanSeries.Points.Add(new DataPoint(-0.5, maxHourWeekly));
-                meanSeries.Points.Add(new DataPoint((int)timeLine - 0.5, maxHourWeekly));
+                if (showAverageHour)
+                {
+                    meanSeries.Points.Add(new DataPoint(-0.5, maxHourWeekly));
+                    meanSeries.Points.Add(new DataPoint((int)timeLine - 0.5, maxHourWeekly));
+                }
             }
             else if (timeLine == GraphicTimeLine.Year)
             {
@@ -554,8 +574,11 @@ namespace YourStopWatch
                         subDivSeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
                     }
                 }
-                meanSeries.Points.Add(new DataPoint(-0.5, maxHourWeekly * 5));
-                meanSeries.Points.Add(new DataPoint((int)timeLine - 0.5, maxHourWeekly * 5));
+                if (showAverageHour)
+                {
+                    meanSeries.Points.Add(new DataPoint(-0.5, maxHourWeekly * 5));
+                    meanSeries.Points.Add(new DataPoint((int)timeLine - 0.5, maxHourWeekly * 5));
+                }
             }
 
             model.Axes.Add(categoryAxis);
@@ -563,8 +586,11 @@ namespace YourStopWatch
             model.Series.Add(subDivSeries);
             model.Series.Add(todaySeries);
 
-            model.Axes.Add(dateTimeAxis);
-            model.Series.Add(meanSeries);
+            if (showAverageHour)
+            {
+                model.Axes.Add(dateTimeAxis);
+                model.Series.Add(meanSeries);
+            }
 
             plotView.Model = model;
         }
@@ -586,7 +612,7 @@ namespace YourStopWatch
 
         private int GetDayOfWeek(DateTime time)
         {
-            return ((int)time.DayOfWeek + 8) % 7 - 1;
+            return ((int)time.DayOfWeek + 6) % 7;
         }
 
         private Func<double, string> GetCorrectLabelFormatting(GraphicTimeLine timeLine)
@@ -662,9 +688,26 @@ namespace YourStopWatch
                 var db = new SQLiteConnection(dbPath);
                 db.CreateTable<Time>();
                 db.Insert(savedTime);
-                AddTimeToOutputList(savedTime, db);
+                db.Close();
+                OutputListLayoutReset();
                 UpdateClock();
             };
+        }
+
+        private void OutputListLayoutReset()
+        {
+            var db = new SQLiteConnection(dbPath);
+            db.CreateTable<Time>();
+            var table = db.Table<Time>().OrderBy(t => t.TimeSaved);
+            outputContainer.RemoveAllViews();
+            outputContainer.AddView(listButtonsGrid);
+
+            foreach (var t in table)
+            {
+                if (Math.Abs(DateTime.Now.DayOfYear - t.TimeSaved.DayOfYear + 365 * (DateTime.Now.Year - t.TimeSaved.Year)) < 14)
+                    AddTimeToOutputList(t, new SQLiteConnection(dbPath));
+            }
+            db.Close();
         }
 
         private void AddTimeToOutputList(Time t, SQLiteConnection db)
@@ -693,26 +736,7 @@ namespace YourStopWatch
                 alert.SetNegativeButton("NO", delegate { return; });
                 alert.Create().Show();
             };
-
-            if (graphicsLayout == null)
-                return;
-            Spinner spinner = graphicsLayout.FindViewById<Spinner>(Resource.Id.spinner_dropdown);
-            if (spinner == null)
-                return;
-            switch (spinner.SelectedItem.ToString())
-            {
-                case "This Week":
-                    UpdateGraphics(GraphicTimeLine.Week);
-                    break;
-                case "This Month":
-                    UpdateGraphics(GraphicTimeLine.Month);
-                    break;
-                case "This Year":
-                    UpdateGraphics(GraphicTimeLine.Year);
-                    break;
-                default:
-                    break;
-            }
+            UpdateGraphicsLayout();
         }
 
         private DateTime ExtractTimerSpan()
