@@ -19,6 +19,7 @@ using OxyPlot;
 using OxyPlot.Axes;
 using OxyPlot.Series;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace YourStopWatch
 {
@@ -38,9 +39,11 @@ namespace YourStopWatch
         View addedView = null;
         TextView timerView;
         const string dbName = "SavedTimesDataBase.db3", settingsName = "AppSettings";
+        Dictionary<string, GraphicTimeLine> spinnerPossibilities = new Dictionary<string, GraphicTimeLine> { { "This Week", GraphicTimeLine.ThisWeek }, { "Last Week", GraphicTimeLine.LastWeek }, { "This Month", GraphicTimeLine.ThisMonth }, { "Month", GraphicTimeLine.Month }, { "This Year", GraphicTimeLine.ThisYear } };
+        Dictionary<GraphicTimeLine, int> subDivPerTimeLine = new Dictionary<GraphicTimeLine, int> { { GraphicTimeLine.ThisWeek, 7 }, { GraphicTimeLine.LastWeek, 7 }, { GraphicTimeLine.ThisMonth, 4 }, { GraphicTimeLine.ThisYear, 12 } };
         readonly static string dbFolder = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), dbPath = System.IO.Path.Combine(dbFolder, dbName);
         bool showCircle, areSettingsUnlocked, showAverageHour;
-        int milli = 0, sec = 0, min = 0, hour = 0, maxHour = 6, bitmapLength = 500, maxHourWeekly;
+        int milli = 0, sec = 0, min = 0, hour = 0, maxHour, bitmapLength, maxHourWeekly;
         const int maxSec = 60, maxMin = 60;
         float secOffset, minOffset, hourOffset;
 
@@ -95,8 +98,6 @@ namespace YourStopWatch
             sec = actual.Second - absoluteRef.Second;
             min = actual.Minute - absoluteRef.Minute;
             hour = actual.Hour - absoluteRef.Hour;
-
-            MapTimerValues();
 
             milli += oldTimer.Millisecond;
             sec += oldTimer.Second;
@@ -310,27 +311,10 @@ namespace YourStopWatch
             TextView title = layout.FindViewById<TextView>(Resource.Id.graphicsTitle);
             Spinner spinner = layout.FindViewById<Spinner>(Resource.Id.spinner_dropdown);
 
-            var adapter = new ArrayAdapter<string>(this, Android.Resource.Layout.SimpleSpinnerItem, new string[] { "This Week", "This Month", "This Year" });
+            var adapter = new ArrayAdapter<string>(this, Android.Resource.Layout.SimpleSpinnerItem, new List<string>(spinnerPossibilities.Keys));
             adapter.SetDropDownViewResource(Android.Resource.Layout.SimpleSpinnerDropDownItem);
             spinner.Adapter = adapter;
-            spinner.ItemSelected += (s, e) =>
-            {
-                string choosed = e.Parent.GetItemAtPosition(e.Position).ToString();
-                switch (choosed)
-                {
-                    case "This Week":
-                        UpdateGraphics(GraphicTimeLine.Week);
-                        break;
-                    case "This Month":
-                        UpdateGraphics(GraphicTimeLine.Month);
-                        break;
-                    case "This Year":
-                        UpdateGraphics(GraphicTimeLine.Year);
-                        break;
-                    default:
-                        break;
-                }
-            };
+            spinner.ItemSelected += delegate { UpdateGraphicsLayout(); };
             return layout;
         }
 
@@ -339,9 +323,9 @@ namespace YourStopWatch
             RelativeLayout layout = (RelativeLayout)((LayoutInflater)BaseContext.GetSystemService(Context.LayoutInflaterService)).Inflate(Resource.Layout.settings_layout, null);
             SeekBar radiusSB = layout.FindViewById<SeekBar>(Resource.Id.radius_seek_bar);
             TextView radiusSBValue = layout.FindViewById<TextView>(Resource.Id.seekbar_value);
-            Switch switchBoxShowCircle = layout.FindViewById<Switch>(Resource.Id.show_circle_checkbox);
             NumberPicker maxHourPicker = layout.FindViewById<NumberPicker>(Resource.Id.max_hour_picker);
             EditText maxWeeklyEdit = layout.FindViewById<EditText>(Resource.Id.max_weekly_edit_text);
+            Switch switchBoxShowCircle = layout.FindViewById<Switch>(Resource.Id.show_circle_checkbox);
             Switch switchShowAverage = layout.FindViewById<Switch>(Resource.Id.show_average_hour);
             Switch lockParams = layout.FindViewById<Switch>(Resource.Id.lock_params);
 
@@ -443,7 +427,7 @@ namespace YourStopWatch
             CommonPageOutput(listLayout);
             Button resetAllButton = FindViewById<Button>(Resource.Id.resetAllButton);
 
-            if (outputContainer.ChildCount == 0)
+            if (outputContainer.ChildCount == 1)
             {
                 Toast.MakeText(this, "There is no registered time for the moment.", ToastLength.Long).Show();
                 resetAllButton.Enabled = false;
@@ -465,31 +449,20 @@ namespace YourStopWatch
             Spinner spinner = graphicsLayout.FindViewById<Spinner>(Resource.Id.spinner_dropdown);
             if (spinner == null)
                 return;
-            switch (spinner.SelectedItem.ToString())
-            {
-                case "This Week":
-                    UpdateGraphics(GraphicTimeLine.Week);
-                    break;
-                case "This Month":
-                    UpdateGraphics(GraphicTimeLine.Month);
-                    break;
-                case "This Year":
-                    UpdateGraphics(GraphicTimeLine.Year);
-                    break;
-                default:
-                    break;
-            }
+            UpdateGraphics(spinnerPossibilities[spinner.SelectedItem.ToString()]);
         }
 
         private void UpdateGraphics(GraphicTimeLine timeLine)
         {
-            float[] hourPerSubDiv = new float[(int)timeLine];
+            int subDiv = subDivPerTimeLine[timeLine];
+            float averageLineHeight = GetAverageLineHeight(timeLine);
+            float[] hourPerSubDiv = new float[subDiv];
             PlotView plotView = graphicsLayout.FindViewById<PlotView>(Resource.Id.plotView);
             PlotModel model = new PlotModel();
 
-            DateTimeAxis dateTimeAxis = new DateTimeAxis { Position = AxisPosition.Bottom, Minimum = -0.5, Maximum = (int)timeLine - 0.5, IsZoomEnabled = false, IsPanEnabled = false, IsAxisVisible = false };
-            CategoryAxis categoryAxis = new CategoryAxis { Position = AxisPosition.Bottom, Minimum = -0.5, Maximum = (int)timeLine - 0.5, LabelFormatter = GetCorrectLabelFormatting(timeLine), IsZoomEnabled = false, IsPanEnabled = false };
-            LinearAxis oridnateAxis = new LinearAxis { Position = AxisPosition.Left, Minimum = 0, MinimumRange = 4, IsZoomEnabled = false, IsPanEnabled = false};
+            DateTimeAxis dateTimeAxis = new DateTimeAxis { Position = AxisPosition.Bottom, Minimum = -0.5, Maximum = subDiv - 0.5, IsZoomEnabled = false, IsPanEnabled = false, IsAxisVisible = false };
+            CategoryAxis categoryAxis = new CategoryAxis { Position = AxisPosition.Bottom, Minimum = -0.5, Maximum = subDiv - 0.5, LabelFormatter = GetCorrectLabelFormatting(timeLine), IsZoomEnabled = false, IsPanEnabled = false };
+            LinearAxis oridnateAxis = new LinearAxis { Position = AxisPosition.Left, Minimum = 0, IsZoomEnabled = false, IsPanEnabled = false};
 
             LineSeries meanSeries = new LineSeries { MarkerSize = 0, Color = OxyColors.Red };
             ColumnSeries subDivSeries = new ColumnSeries { FillColor = OxyColors.Green, StrokeColor = OxyColors.Green };
@@ -499,15 +472,15 @@ namespace YourStopWatch
             db.CreateTable<Time>();
             var table = db.Table<Time>();
 
-            if (timeLine == GraphicTimeLine.Week)
+            if (timeLine == GraphicTimeLine.ThisWeek)
             {
                 foreach (Time t in table)
                 {
-                    if (t.TimeSaved.Year == DateTime.Now.Year && GetWeekDiference(DateTime.Now, t.TimeSaved) == 0)
+                    if ((t.TimeSaved.Year == DateTime.Now.Year || Math.Abs(t.TimeSaved.Year - DateTime.Now.Year) == 1) && GetWeekDiference(DateTime.Now, t.TimeSaved) == 0)
                         hourPerSubDiv[GetDayOfWeek(t.TimeSaved)] += t.TimeSaved.Hour + t.TimeSaved.Minute / 60f;
                 }
 
-                for (int i = 0; i < (int)timeLine; i++)
+                for (int i = 0; i < subDiv; i++)
                 {
                     if (i == GetDayOfWeek(DateTime.Now))
                     {
@@ -520,23 +493,32 @@ namespace YourStopWatch
                         subDivSeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
                     }
                 }
-                if (showAverageHour)
-                {
-                    meanSeries.Points.Add(new DataPoint(-0.5, maxHourWeekly / 7f));
-                    meanSeries.Points.Add(new DataPoint((int)timeLine - 0.5, maxHourWeekly / 7f));
-                }
             }
-            else if (timeLine == GraphicTimeLine.Month)
+            if (timeLine == GraphicTimeLine.LastWeek)
             {
                 foreach (Time t in table)
                 {
-                    if (GetWeekDiference(DateTime.Now, t.TimeSaved) < 4)
+                    if ((t.TimeSaved.Year == DateTime.Now.Year || Math.Abs(t.TimeSaved.Year - DateTime.Now.Year) == 1) && GetWeekDiference(DateTime.Now.AddDays(-7), t.TimeSaved) == 0)
+                        hourPerSubDiv[GetDayOfWeek(t.TimeSaved)] += t.TimeSaved.Hour + t.TimeSaved.Minute / 60f;
+                }
+
+                for (int i = 0; i < subDiv; i++)
+                {
+                    subDivSeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
+                    subDivSeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
+                }
+            }
+            else if (timeLine == GraphicTimeLine.ThisMonth)
+            {
+                foreach (Time t in table)
+                {
+                    if ((t.TimeSaved.Year == DateTime.Now.Year || Math.Abs(t.TimeSaved.Year - DateTime.Now.Year) == 1) && GetWeekDiference(DateTime.Now, t.TimeSaved) < 4)
                         hourPerSubDiv[3 - GetWeekDiference(DateTime.Now, t.TimeSaved)] += t.TimeSaved.Hour + t.TimeSaved.Minute / 60f;
                 }
 
-                for (int i = 0; i < (int)timeLine; i++)
+                for (int i = 0; i < subDiv; i++)
                 {
-                    if (i + 1 == (int)timeLine)
+                    if (i + 1 == subDiv)
                     {
                         todaySeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
                         todaySeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
@@ -547,13 +529,8 @@ namespace YourStopWatch
                         subDivSeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
                     }
                 }
-                if (showAverageHour)
-                {
-                    meanSeries.Points.Add(new DataPoint(-0.5, maxHourWeekly));
-                    meanSeries.Points.Add(new DataPoint((int)timeLine - 0.5, maxHourWeekly));
-                }
             }
-            else if (timeLine == GraphicTimeLine.Year)
+            else if (timeLine == GraphicTimeLine.ThisYear)
             {
                 foreach (Time t in table)
                 {
@@ -561,7 +538,7 @@ namespace YourStopWatch
                         hourPerSubDiv[t.TimeSaved.Month - 1] += t.TimeSaved.Hour + t.TimeSaved.Minute / 60f;
                 }
 
-                for (int i = 0; i < (int)timeLine; i++)
+                for (int i = 0; i < subDiv; i++)
                 {
                     if (i + 1 == DateTime.Now.Month)
                     {
@@ -574,11 +551,6 @@ namespace YourStopWatch
                         subDivSeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
                     }
                 }
-                if (showAverageHour)
-                {
-                    meanSeries.Points.Add(new DataPoint(-0.5, maxHourWeekly * 5));
-                    meanSeries.Points.Add(new DataPoint((int)timeLine - 0.5, maxHourWeekly * 5));
-                }
             }
 
             model.Axes.Add(categoryAxis);
@@ -588,6 +560,9 @@ namespace YourStopWatch
 
             if (showAverageHour)
             {
+                meanSeries.Points.Add(new DataPoint(-0.5, averageLineHeight));
+                meanSeries.Points.Add(new DataPoint(subDiv - 0.5, averageLineHeight));
+
                 model.Axes.Add(dateTimeAxis);
                 model.Series.Add(meanSeries);
             }
@@ -615,15 +590,32 @@ namespace YourStopWatch
             return ((int)time.DayOfWeek + 6) % 7;
         }
 
+        private float GetAverageLineHeight(GraphicTimeLine timeLine)
+        {
+            switch (timeLine)
+            {
+                case GraphicTimeLine.ThisWeek:
+                case GraphicTimeLine.LastWeek:
+                    return maxHourWeekly / 7f;
+                case GraphicTimeLine.ThisMonth:
+                    return maxHourWeekly;
+                case GraphicTimeLine.ThisYear:
+                    return maxHourWeekly * 4.345f;
+                default:
+                    return 0;
+            }
+        }
+
         private Func<double, string> GetCorrectLabelFormatting(GraphicTimeLine timeLine)
         {
             switch (timeLine)
             {
-                case GraphicTimeLine.Week:
+                case GraphicTimeLine.ThisWeek:
+                case GraphicTimeLine.LastWeek:
                     return GetDayOfWeekName;
-                case GraphicTimeLine.Month:
+                case GraphicTimeLine.ThisMonth:
                     return GetWeekNumber;
-                case GraphicTimeLine.Year:
+                case GraphicTimeLine.ThisYear:
                     return GetMonthName;
                 default:
                     return null;
@@ -844,9 +836,11 @@ namespace YourStopWatch
     
     public enum GraphicTimeLine
     {
-        Week = 7,
-        Month = 4,
-        Year = 12
+        ThisWeek,
+        LastWeek,
+        ThisMonth,
+        Month,
+        ThisYear
     }
 
     public enum ButtonsState
