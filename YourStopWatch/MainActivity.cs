@@ -1,14 +1,10 @@
 ﻿using Android.App;
 using Android.Graphics;
 using Android.OS;
-using Android.Runtime;
 using Android.Support.Design.Widget;
-using Android.Support.V7.App;
 using Android.Views;
 using Android.Widget;
 using System.Timers;
-using Android.Graphics.Drawables.Shapes;
-using Android.Graphics.Drawables;
 using System;
 using SQLite;
 using System.ComponentModel;
@@ -19,12 +15,17 @@ using OxyPlot;
 using OxyPlot.Axes;
 using OxyPlot.Series;
 using System.Collections.Generic;
-using System.Linq;
+using Microsoft.WindowsAzure.MobileServices;
+using Android.Gms.Auth.Api.SignIn;
+using Android.Gms.Common.Apis;
+using Android.Gms.Auth.Api;
+using Android.Gms.Common;
+using Android.Runtime;
 
 namespace YourStopWatch
 {
     [Activity(Label = "@string/app_name", Theme = "@style/AppTheme", MainLauncher = true, ScreenOrientation = Android.Content.PM.ScreenOrientation.Portrait)]
-    public class MainActivity : Android.Support.V7.App.AppCompatActivity, BottomNavigationView.IOnNavigationItemSelectedListener
+    public class MainActivity : Android.Support.V7.App.AppCompatActivity, BottomNavigationView.IOnNavigationItemSelectedListener, GoogleApiClient.IConnectionCallbacks, GoogleApiClient.IOnConnectionFailedListener
     {
         LinearLayout outputContainer;
         GridLayout listButtonsGrid;
@@ -39,13 +40,20 @@ namespace YourStopWatch
         View addedView = null;
         TextView timerView;
         const string dbName = "SavedTimesDataBase.db3", settingsName = "AppSettings";
-        Dictionary<string, GraphicTimeLine> spinnerPossibilities = new Dictionary<string, GraphicTimeLine> { { "This Week", GraphicTimeLine.ThisWeek }, { "Last Week", GraphicTimeLine.LastWeek }, { "This Month", GraphicTimeLine.ThisMonth }, { "Month", GraphicTimeLine.Month }, { "This Year", GraphicTimeLine.ThisYear } };
+        Dictionary<string, GraphicTimeLine> spinnerPossibilities = new Dictionary<string, GraphicTimeLine> { { "This Week", GraphicTimeLine.ThisWeek }, { "Last Week", GraphicTimeLine.LastWeek }, { "This Month", GraphicTimeLine.ThisMonth }, /*{ "Month", GraphicTimeLine.Month },*/ { "This Year", GraphicTimeLine.ThisYear } };
         Dictionary<GraphicTimeLine, int> subDivPerTimeLine = new Dictionary<GraphicTimeLine, int> { { GraphicTimeLine.ThisWeek, 7 }, { GraphicTimeLine.LastWeek, 7 }, { GraphicTimeLine.ThisMonth, 4 }, { GraphicTimeLine.ThisYear, 12 } };
         readonly static string dbFolder = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), dbPath = System.IO.Path.Combine(dbFolder, dbName);
         bool showCircle, areSettingsUnlocked, showAverageHour;
         int milli = 0, sec = 0, min = 0, hour = 0, maxHour, bitmapLength, maxHourWeekly;
         const int maxSec = 60, maxMin = 60;
         float secOffset, minOffset, hourOffset;
+
+        public static MobileServiceClient MobileService = new MobileServiceClient("https://yourstopwatch.azurewebsites.net");
+
+        GoogleApiClient mGoogleApiClient;
+        GoogleSignInAccount account;
+
+        public const int SIGN_IN_ID = 9001;
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
@@ -68,6 +76,62 @@ namespace YourStopWatch
             StopWatchLayoutOutput();
 
             ToggleButtons(ButtonsState.End);
+
+
+            //CurrentPlatform.Init();
+            //TodoItem item = new TodoItem { Text = "This is a test" };
+            //MobileService.GetTable<TodoItem>().InsertAsync(item);
+            //ConfigureGoogleSignIn();
+        }
+
+        protected override void OnActivityResult(int requestCode, [GeneratedEnum] Result resultCode, Intent data)
+        {
+            base.OnActivityResult(requestCode, resultCode, data);
+            if (requestCode == SIGN_IN_ID)
+            {
+                var result = Auth.GoogleSignInApi.GetSignInResultFromIntent(data);
+                HandlesSignInResult(result);
+            }
+        }
+
+        private void HandlesSignInResult(GoogleSignInResult result)
+        {
+            if (result.IsSuccess)
+            {
+                account = result.SignInAccount;
+            }
+        }
+
+        private void ConfigureGoogleSignIn()
+        {
+            GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DefaultSignIn).RequestEmail().Build();
+
+            mGoogleApiClient = new GoogleApiClient.Builder(this).EnableAutoManage(this, this).AddApi(Auth.GOOGLE_SIGN_IN_API, gso).AddConnectionCallbacks(this).Build();
+
+            var signinIntent = Auth.GoogleSignInApi.GetSignInIntent(mGoogleApiClient);
+            StartActivityForResult(signinIntent, SIGN_IN_ID);
+        }
+
+        public void OnConnected(Bundle connectionHint)
+        {
+            //throw new NotImplementedException();
+        }
+
+        public void OnConnectionSuspended(int cause)
+        {
+            //throw new NotImplementedException();
+        }
+
+        public void OnConnectionFailed(ConnectionResult result)
+        {
+            //throw new NotImplementedException();
+        }
+
+        private async void AddItemTest()
+        {
+            CurrentPlatform.Init();
+            TodoItem item = new TodoItem { Text = "This is a test" };
+            await MobileService.GetTable<TodoItem>().InsertAsync(item);
         }
 
         protected override void OnResume()
@@ -848,6 +912,12 @@ namespace YourStopWatch
         Start,
         End,
         Pause
+    }
+
+    public class TodoItem
+    {
+        public string Id { get; set; }
+        public string Text { get; set; }
     }
 
     [Table("Times")]
