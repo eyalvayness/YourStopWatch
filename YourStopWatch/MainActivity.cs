@@ -21,6 +21,7 @@ using Android.Gms.Common.Apis;
 using Android.Gms.Auth.Api;
 using Android.Gms.Common;
 using Android.Runtime;
+using Xamarin.Auth;
 
 namespace YourStopWatch
 {
@@ -73,8 +74,9 @@ namespace YourStopWatch
             graphicsLayout = GraphicsLayoutSetup();
             settingsLayout = SettingsLayoutSetup();
 
-            if (userName == null && userId == null)
-                ConfigureGoogleSignIn();
+            ConfigureGoogleSignIn();
+            GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DefaultSignIn).RequestIdToken("958576441152-s9bqn0pe7rtrudo6kj5tv7pjp5pi6e0k.apps.googleusercontent.com").RequestEmail().Build();
+            mGoogleApiClient = new GoogleApiClient.Builder(this).EnableAutoManage(this, this).AddApi(Auth.GOOGLE_SIGN_IN_API, gso).Build();
 
             CurrentPlatform.Init();
 
@@ -82,6 +84,12 @@ namespace YourStopWatch
             MobileService.LoginAsync(MobileServiceAuthenticationProvider.WindowsAzureActiveDirectory, new Newtonsoft.Json.Linq.JObject());
 
             ToggleButtons(ButtonsState.End);
+        }
+
+        protected override void OnStart()
+        {
+            base.OnStart();
+            mGoogleApiClient.Connect();
         }
 
         protected override void OnActivityResult(int requestCode, [GeneratedEnum] Result resultCode, Intent data)
@@ -104,24 +112,19 @@ namespace YourStopWatch
             }
         }
 
+        private void GooglePlusLogIn()
+        {
+            var signinIntent = Auth.GoogleSignInApi.GetSignInIntent(mGoogleApiClient);
+            StartActivityForResult(signinIntent, RC_SIGN_IN);
+        }
+
         private void ConfigureGoogleSignIn()
         {
             var alert = new Android.Support.V7.App.AlertDialog.Builder(this);
             alert.SetTitle("Log in")
                 .SetCancelable(false)
-                .SetMessage("In order to keep your recorded times between sessions, please log into the app with a google account.")
-                .SetPositiveButton("Log in", delegate
-                {
-                    GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DefaultSignIn).RequestEmail().Build();
-
-                    mGoogleApiClient = new GoogleApiClient.Builder(this).EnableAutoManage(this, this).AddApi(Auth.GOOGLE_SIGN_IN_API, gso).Build();
-
-                    var opr = Auth.GoogleSignInApi.SilentSignIn(mGoogleApiClient);
-
-                    var signinIntent = Auth.GoogleSignInApi.GetSignInIntent(mGoogleApiClient);
-                    StartActivityForResult(signinIntent, RC_SIGN_IN);
-                    mGoogleApiClient.Connect();
-                });
+                .SetMessage("In order to keep your recorded times between sessions, please log into the app with a google account in the settings page.")
+                .SetPositiveButton("OK", delegate { });
             alert.Create().Show();
 
         }
@@ -391,7 +394,9 @@ namespace YourStopWatch
         {
             RelativeLayout layout = (RelativeLayout)((LayoutInflater)BaseContext.GetSystemService(Context.LayoutInflaterService)).Inflate(Resource.Layout.settings_layout, null);
             SeekBar radiusSB = layout.FindViewById<SeekBar>(Resource.Id.radius_seek_bar);
+            Button loginButton = layout.FindViewById<Button>(Resource.Id.loginButton);
             TextView radiusSBValue = layout.FindViewById<TextView>(Resource.Id.seekbar_value);
+            TextView accountText = layout.FindViewById<TextView>(Resource.Id.setting_account);
             NumberPicker maxHourPicker = layout.FindViewById<NumberPicker>(Resource.Id.max_hour_picker);
             EditText maxWeeklyEdit = layout.FindViewById<EditText>(Resource.Id.max_weekly_edit_text);
             Switch switchBoxShowCircle = layout.FindViewById<Switch>(Resource.Id.show_circle_checkbox);
@@ -399,6 +404,7 @@ namespace YourStopWatch
             Switch lockParams = layout.FindViewById<Switch>(Resource.Id.lock_params);
 
             lockParams.Checked = !areSettingsUnlocked;
+            loginButton.Enabled = areSettingsUnlocked;
             radiusSB.Enabled = areSettingsUnlocked;
             switchBoxShowCircle.Enabled = areSettingsUnlocked;
             maxHourPicker.Enabled = areSettingsUnlocked;
@@ -409,10 +415,17 @@ namespace YourStopWatch
             {
                 areSettingsUnlocked = !lockParams.Checked;
                 radiusSB.Enabled = areSettingsUnlocked;
+                loginButton.Enabled = areSettingsUnlocked;
                 switchShowAverage.Enabled = areSettingsUnlocked;
                 switchBoxShowCircle.Enabled = areSettingsUnlocked;
                 maxHourPicker.Enabled = areSettingsUnlocked;
                 maxWeeklyEdit.Enabled = areSettingsUnlocked;
+            };
+
+            loginButton.Click += delegate
+            {
+                GooglePlusLogIn();
+                accountText.Text = $"You are logged in as {userName}";
             };
 
             switchShowAverage.Checked = showAverageHour;
