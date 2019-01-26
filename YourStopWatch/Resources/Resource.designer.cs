@@ -36,6 +36,132 @@ namespace YourStopWatch
 			global::Xamarin.Auth._MobileServices.Resource.String.title_activity_webview = global::YourStopWatch.Resource.String.title_activity_webview;
 			global::PCLCrypto.Resource.String.ApplicationName = global::YourStopWatch.Resource.String.ApplicationName;
 			global::PCLCrypto.Resource.String.Hello = global::YourStopWatch.Resource.String.Hello;
+			global::Xamarin.Auth.Resource.Animation.slide_in_right = global::YourStopWatch.Resource.Animation.slide_in_right;
+			global::Xamarin.Auth.Resource.Animation.slide_out_left = global::YourStopWatch.Resource.Animation.slide_out_left;
+			global::Xamarin.Auth.Resource.Attribute.font = global::YourStopWatch.Resource.Attribute.font;
+			global::Xamarin.Auth.Resource.Attribute.fontProviderAuthority = global::YourStopWatch.Resource.Attribute.fontProviderAuthority;
+			global::Xamarin.Auth.Resource.Attribute.fontProviderCerts = global::YourStopWatch.Resource.Attribute.fontProviderCerts;
+			global::Xamarin.Auth.Resource.Attribute.fontProviderFetchStrategy = global::YourStopWatch.Resource.Attribute.fontProviderFetchStrategy;
+			global::Xamarin.Auth.Resource.Attribute.fontProviderFetchTimeout = global::YourStopWatch.Resource.Attribute.fontProviderFetchTimeout;
+			global::Xamarin.Auth.Resource.Attribute.fontProviderPackage = global::YourStopWatch.Resource.Attribute.fontProviderPackage;
+			global::Xamarin.Auth.Resource.Attribute.fontProviderQuery = global::YourStopWatch.Resource.Attribute.fontProviderQuery;
+			global::Xamarin.Auth.Resource.Attribute.fontStyle = global::YourStopWatch.Resource.Attribute.fontStyle;
+			global::Xamarin.Auth.Resource.Attribute.fontWeight = global::YourStopWatch.Resource.Attribute.fontWeight;
+			global::Xamarin.Auth.Resource.Boolean.abc_action_bar_embed_tabs = global::YourStopWatch.Resource.Boolean.abc_action_bar_embed_tabs;
+			global::Xamarin.Auth.Resource.Color.notification_action_color_filter = global::YourStopWatch.Resource.Color.notification_action_color_filter;
+			global::Xamarin.Auth.Resource.Color.notification_icon_bg_color = global::YourStopWatch.Resource.Color.notification_icon_bg_color;
+			global::Xamarin.Auth.Resource.Color.notification_material_background_media_default_color = global::YourStopWatch.Resource.Color.notification_material_background_media_default_color;
+			global::Xamarin.Auth.Resource.Color.primary_text_default_material_dark = global::YourStopWatch.Resource.Color.primary_text_default_material_dark;
+			global::Xamarin.Auth.Resource.Color.ripple_material_light = global::YourStopWatch.Resource.Color.ripple_material_light;
+			global::Xamarin.Auth.Resource.Color.secondary_text_default_material_dark = global::YourStopWatch.Resource.Color.secondary_text_default_material_dark;
+			global::Xamarin.Auth.Resource.Color.secondary_text_default_material_light = global::YourStopWatch.Resource.Color.secondary_text_default_material_light;
+			global::Xamarin.Auth.Resource.Dimension.compat_button_inset_horizontal_material = global::YourStopWatch.Resource.Dimension.compat_button_inset_horizontal_material;
+			global::Xamarin.Auth.Resource.Dimension.compat_button_inset_vertical_material = global::YourStopWatch.Resource.Dimension.compat_button_inset_vertical_material;
+			global::Xamarin.Auth.Resource.Dimension.compat_button_padding_horizontal_material = global::YourStopWatch.Resource.Dimension.compat_button_padding_horizontal_material;
+			global::Xamarin.Auth.Resource.Dimension.compat_button_padding_vertical_material = global::YourStopWatch.Resource.Dimension.compat_button_padding_vertical_material;
+			global::Xamarin.Auth.Resource.Dimension.compat_control_corner_material = global::YourStopWatch.Resource.Dimension.compat_control_corner_material;
+			global::Xamarin.Auth.Resource.Dimension.notification_action_icon_size = global::YourStopWatch.Resource.Dimension.notification_action_icon_size;
+			global::Xamarin.Auth.Resource.Dimension.notification_action_text_size = global::YourStopWatch.Resource.Dimension.notification_action_text_size;
+			global::Xamarin.Auth.Resource.Dimension.notification_big_circle_margin = global::YourStopWatch.Resource.Dimension.notification_big_circle_margin;
+			global::Xamarin.Auth.Resource.Dimension.notification_content_margin_start = global::YourStopWatch.Resource.Dimension.notification_content_margin_start;
+			global::Xamarin.Auth.Resource.Dimension.notification_large_icon_height = global::YourStopWatch.Resource.Dimension.notification_large_icon_height;
+			global::Xamarin.Auth.Resource.Dimension.notification_large_icon_width = global::YourStopWatch.Resource.Dimension.notification_large_icon_width;
+			global::Xamarin.Auth.Resource.Dimension.notification_main_column_padding_top = global::YourStopWatch.Resource.Dimension.notification_main_column_padding_top;
+			global::Xamarin.Auth.Resource.Dimension.notification_media_narrow_margin = global::YourStopWatch.Resource.Dimension.notification_media_narrow_margin;
+			global::Xamarin.Auth.Resource.Dimension.notification_right_icon_size = global::YourStopWatch.Resource.Dimension.notification_right_icon_size;
+			global::Xamarin.Auth.Resource.Dimension.notification_right_side_padding_top = global::YourStopWatch.Resource.Dimension.notification_right_side_padding_top;
+			global::Xamarin.Auth.Resource.Dimension.notification_small_icon_background_padding = global::YourStopWatch.Resource.Dimension.notification_small_icon_background_padding;
+			global::Xamarin.Auth.Resource.Dimension.notification_small_icon_size_as_large = global::YourStopWatch.Resource.Dimension.notification_small_icon_size_as_large;
+			global::Xamarin.Auth.Resource.Dimension.notification_subtext_size = global::YourStopWatch.Resource.Dimension.notification_subtext_size;
+			global::Xamarin.Auth.Resource.Dimension.notification_top_pad = global::YourStopWatch.Resource.Dimension.notification_top_pad;
+			global::Xamarin.Auth.Resource.Dimension.notification_top_pad_large_text = global::YourStopWatch.Resource.Dimension.notification_top_pad_large_text;
+			global::Xamarin.Auth.Resource.Drawable.ic_arrow_back = global::YourStopWatch.Resource.Drawable.ic_arrow_back;
+			global::Xamarin.Auth.Resource.Drawable.notification_action_background = global::YourStopWatch.Resource.Drawable.notification_action_background;
+			global::Xamarin.Auth.Resource.Drawable.notification_bg = global::YourStopWatch.Resource.Drawable.notification_bg;
+			global::Xamarin.Auth.Resource.Drawable.notification_bg_low = global::YourStopWatch.Resource.Drawable.notification_bg_low;
+			global::Xamarin.Auth.Resource.Drawable.notification_bg_low_normal = global::YourStopWatch.Resource.Drawable.notification_bg_low_normal;
+			global::Xamarin.Auth.Resource.Drawable.notification_bg_low_pressed = global::YourStopWatch.Resource.Drawable.notification_bg_low_pressed;
+			global::Xamarin.Auth.Resource.Drawable.notification_bg_normal = global::YourStopWatch.Resource.Drawable.notification_bg_normal;
+			global::Xamarin.Auth.Resource.Drawable.notification_bg_normal_pressed = global::YourStopWatch.Resource.Drawable.notification_bg_normal_pressed;
+			global::Xamarin.Auth.Resource.Drawable.notification_icon_background = global::YourStopWatch.Resource.Drawable.notification_icon_background;
+			global::Xamarin.Auth.Resource.Drawable.notification_template_icon_bg = global::YourStopWatch.Resource.Drawable.notification_template_icon_bg;
+			global::Xamarin.Auth.Resource.Drawable.notification_template_icon_low_bg = global::YourStopWatch.Resource.Drawable.notification_template_icon_low_bg;
+			global::Xamarin.Auth.Resource.Drawable.notification_tile_bg = global::YourStopWatch.Resource.Drawable.notification_tile_bg;
+			global::Xamarin.Auth.Resource.Drawable.notify_panel_notification_icon_bg = global::YourStopWatch.Resource.Drawable.notify_panel_notification_icon_bg;
+			global::Xamarin.Auth.Resource.Id.action0 = global::YourStopWatch.Resource.Id.action0;
+			global::Xamarin.Auth.Resource.Id.action_container = global::YourStopWatch.Resource.Id.action_container;
+			global::Xamarin.Auth.Resource.Id.action_divider = global::YourStopWatch.Resource.Id.action_divider;
+			global::Xamarin.Auth.Resource.Id.action_image = global::YourStopWatch.Resource.Id.action_image;
+			global::Xamarin.Auth.Resource.Id.action_text = global::YourStopWatch.Resource.Id.action_text;
+			global::Xamarin.Auth.Resource.Id.actions = global::YourStopWatch.Resource.Id.actions;
+			global::Xamarin.Auth.Resource.Id.async = global::YourStopWatch.Resource.Id.async;
+			global::Xamarin.Auth.Resource.Id.blocking = global::YourStopWatch.Resource.Id.blocking;
+			global::Xamarin.Auth.Resource.Id.cancel_action = global::YourStopWatch.Resource.Id.cancel_action;
+			global::Xamarin.Auth.Resource.Id.chronometer = global::YourStopWatch.Resource.Id.chronometer;
+			global::Xamarin.Auth.Resource.Id.end_padder = global::YourStopWatch.Resource.Id.end_padder;
+			global::Xamarin.Auth.Resource.Id.forever = global::YourStopWatch.Resource.Id.forever;
+			global::Xamarin.Auth.Resource.Id.icon = global::YourStopWatch.Resource.Id.icon;
+			global::Xamarin.Auth.Resource.Id.icon_group = global::YourStopWatch.Resource.Id.icon_group;
+			global::Xamarin.Auth.Resource.Id.info = global::YourStopWatch.Resource.Id.info;
+			global::Xamarin.Auth.Resource.Id.italic = global::YourStopWatch.Resource.Id.italic;
+			global::Xamarin.Auth.Resource.Id.line1 = global::YourStopWatch.Resource.Id.line1;
+			global::Xamarin.Auth.Resource.Id.line3 = global::YourStopWatch.Resource.Id.line3;
+			global::Xamarin.Auth.Resource.Id.media_actions = global::YourStopWatch.Resource.Id.media_actions;
+			global::Xamarin.Auth.Resource.Id.normal = global::YourStopWatch.Resource.Id.normal;
+			global::Xamarin.Auth.Resource.Id.notification_background = global::YourStopWatch.Resource.Id.notification_background;
+			global::Xamarin.Auth.Resource.Id.notification_main_column = global::YourStopWatch.Resource.Id.notification_main_column;
+			global::Xamarin.Auth.Resource.Id.notification_main_column_container = global::YourStopWatch.Resource.Id.notification_main_column_container;
+			global::Xamarin.Auth.Resource.Id.right_icon = global::YourStopWatch.Resource.Id.right_icon;
+			global::Xamarin.Auth.Resource.Id.right_side = global::YourStopWatch.Resource.Id.right_side;
+			global::Xamarin.Auth.Resource.Id.status_bar_latest_event_content = global::YourStopWatch.Resource.Id.status_bar_latest_event_content;
+			global::Xamarin.Auth.Resource.Id.text = global::YourStopWatch.Resource.Id.text;
+			global::Xamarin.Auth.Resource.Id.text2 = global::YourStopWatch.Resource.Id.text2;
+			global::Xamarin.Auth.Resource.Id.time = global::YourStopWatch.Resource.Id.time;
+			global::Xamarin.Auth.Resource.Id.title = global::YourStopWatch.Resource.Id.title;
+			global::Xamarin.Auth.Resource.Id.webview = global::YourStopWatch.Resource.Id.webview;
+			global::Xamarin.Auth.Resource.Integer.cancel_button_image_alpha = global::YourStopWatch.Resource.Integer.cancel_button_image_alpha;
+			global::Xamarin.Auth.Resource.Integer.status_bar_notification_info_maxnum = global::YourStopWatch.Resource.Integer.status_bar_notification_info_maxnum;
+			global::Xamarin.Auth.Resource.Layout.activity_webview = global::YourStopWatch.Resource.Layout.activity_webview;
+			global::Xamarin.Auth.Resource.Layout.notification_action = global::YourStopWatch.Resource.Layout.notification_action;
+			global::Xamarin.Auth.Resource.Layout.notification_action_tombstone = global::YourStopWatch.Resource.Layout.notification_action_tombstone;
+			global::Xamarin.Auth.Resource.Layout.notification_media_action = global::YourStopWatch.Resource.Layout.notification_media_action;
+			global::Xamarin.Auth.Resource.Layout.notification_media_cancel_action = global::YourStopWatch.Resource.Layout.notification_media_cancel_action;
+			global::Xamarin.Auth.Resource.Layout.notification_template_big_media = global::YourStopWatch.Resource.Layout.notification_template_big_media;
+			global::Xamarin.Auth.Resource.Layout.notification_template_big_media_custom = global::YourStopWatch.Resource.Layout.notification_template_big_media_custom;
+			global::Xamarin.Auth.Resource.Layout.notification_template_big_media_narrow = global::YourStopWatch.Resource.Layout.notification_template_big_media_narrow;
+			global::Xamarin.Auth.Resource.Layout.notification_template_big_media_narrow_custom = global::YourStopWatch.Resource.Layout.notification_template_big_media_narrow_custom;
+			global::Xamarin.Auth.Resource.Layout.notification_template_custom_big = global::YourStopWatch.Resource.Layout.notification_template_custom_big;
+			global::Xamarin.Auth.Resource.Layout.notification_template_icon_group = global::YourStopWatch.Resource.Layout.notification_template_icon_group;
+			global::Xamarin.Auth.Resource.Layout.notification_template_lines_media = global::YourStopWatch.Resource.Layout.notification_template_lines_media;
+			global::Xamarin.Auth.Resource.Layout.notification_template_media = global::YourStopWatch.Resource.Layout.notification_template_media;
+			global::Xamarin.Auth.Resource.Layout.notification_template_media_custom = global::YourStopWatch.Resource.Layout.notification_template_media_custom;
+			global::Xamarin.Auth.Resource.Layout.notification_template_part_chronometer = global::YourStopWatch.Resource.Layout.notification_template_part_chronometer;
+			global::Xamarin.Auth.Resource.Layout.notification_template_part_time = global::YourStopWatch.Resource.Layout.notification_template_part_time;
+			global::Xamarin.Auth.Resource.String.status_bar_notification_info_overflow = global::YourStopWatch.Resource.String.status_bar_notification_info_overflow;
+			global::Xamarin.Auth.Resource.String.title_activity_webview = global::YourStopWatch.Resource.String.title_activity_webview;
+			global::Xamarin.Auth.Resource.Style.TextAppearance_Compat_Notification = global::YourStopWatch.Resource.Style.TextAppearance_Compat_Notification;
+			global::Xamarin.Auth.Resource.Style.TextAppearance_Compat_Notification_Info = global::YourStopWatch.Resource.Style.TextAppearance_Compat_Notification_Info;
+			global::Xamarin.Auth.Resource.Style.TextAppearance_Compat_Notification_Info_Media = global::YourStopWatch.Resource.Style.TextAppearance_Compat_Notification_Info_Media;
+			global::Xamarin.Auth.Resource.Style.TextAppearance_Compat_Notification_Line2 = global::YourStopWatch.Resource.Style.TextAppearance_Compat_Notification_Line2;
+			global::Xamarin.Auth.Resource.Style.TextAppearance_Compat_Notification_Line2_Media = global::YourStopWatch.Resource.Style.TextAppearance_Compat_Notification_Line2_Media;
+			global::Xamarin.Auth.Resource.Style.TextAppearance_Compat_Notification_Media = global::YourStopWatch.Resource.Style.TextAppearance_Compat_Notification_Media;
+			global::Xamarin.Auth.Resource.Style.TextAppearance_Compat_Notification_Time = global::YourStopWatch.Resource.Style.TextAppearance_Compat_Notification_Time;
+			global::Xamarin.Auth.Resource.Style.TextAppearance_Compat_Notification_Time_Media = global::YourStopWatch.Resource.Style.TextAppearance_Compat_Notification_Time_Media;
+			global::Xamarin.Auth.Resource.Style.TextAppearance_Compat_Notification_Title = global::YourStopWatch.Resource.Style.TextAppearance_Compat_Notification_Title;
+			global::Xamarin.Auth.Resource.Style.TextAppearance_Compat_Notification_Title_Media = global::YourStopWatch.Resource.Style.TextAppearance_Compat_Notification_Title_Media;
+			global::Xamarin.Auth.Resource.Style.Widget_Compat_NotificationActionContainer = global::YourStopWatch.Resource.Style.Widget_Compat_NotificationActionContainer;
+			global::Xamarin.Auth.Resource.Style.Widget_Compat_NotificationActionText = global::YourStopWatch.Resource.Style.Widget_Compat_NotificationActionText;
+			global::Xamarin.Auth.Resource.Styleable.FontFamily = global::YourStopWatch.Resource.Styleable.FontFamily;
+			global::Xamarin.Auth.Resource.Styleable.FontFamily_fontProviderAuthority = global::YourStopWatch.Resource.Styleable.FontFamily_fontProviderAuthority;
+			global::Xamarin.Auth.Resource.Styleable.FontFamily_fontProviderCerts = global::YourStopWatch.Resource.Styleable.FontFamily_fontProviderCerts;
+			global::Xamarin.Auth.Resource.Styleable.FontFamily_fontProviderFetchStrategy = global::YourStopWatch.Resource.Styleable.FontFamily_fontProviderFetchStrategy;
+			global::Xamarin.Auth.Resource.Styleable.FontFamily_fontProviderFetchTimeout = global::YourStopWatch.Resource.Styleable.FontFamily_fontProviderFetchTimeout;
+			global::Xamarin.Auth.Resource.Styleable.FontFamily_fontProviderPackage = global::YourStopWatch.Resource.Styleable.FontFamily_fontProviderPackage;
+			global::Xamarin.Auth.Resource.Styleable.FontFamily_fontProviderQuery = global::YourStopWatch.Resource.Styleable.FontFamily_fontProviderQuery;
+			global::Xamarin.Auth.Resource.Styleable.FontFamilyFont = global::YourStopWatch.Resource.Styleable.FontFamilyFont;
+			global::Xamarin.Auth.Resource.Styleable.FontFamilyFont_font = global::YourStopWatch.Resource.Styleable.FontFamilyFont_font;
+			global::Xamarin.Auth.Resource.Styleable.FontFamilyFont_fontStyle = global::YourStopWatch.Resource.Styleable.FontFamilyFont_fontStyle;
+			global::Xamarin.Auth.Resource.Styleable.FontFamilyFont_fontWeight = global::YourStopWatch.Resource.Styleable.FontFamilyFont_fontWeight;
 		}
 		
 		public partial class Animation
@@ -3809,110 +3935,110 @@ namespace YourStopWatch
 		public partial class String
 		{
 			
+			// aapt resource value: 0x7f08003c
+			public const int ApplicationName = 2131230780;
+			
 			// aapt resource value: 0x7f08003b
-			public const int ApplicationName = 2131230779;
-			
-			// aapt resource value: 0x7f08003a
-			public const int Hello = 2131230778;
-			
-			// aapt resource value: 0x7f080013
-			public const int abc_action_bar_home_description = 2131230739;
+			public const int Hello = 2131230779;
 			
 			// aapt resource value: 0x7f080014
-			public const int abc_action_bar_up_description = 2131230740;
+			public const int abc_action_bar_home_description = 2131230740;
 			
 			// aapt resource value: 0x7f080015
-			public const int abc_action_menu_overflow_description = 2131230741;
+			public const int abc_action_bar_up_description = 2131230741;
 			
 			// aapt resource value: 0x7f080016
-			public const int abc_action_mode_done = 2131230742;
+			public const int abc_action_menu_overflow_description = 2131230742;
 			
 			// aapt resource value: 0x7f080017
-			public const int abc_activity_chooser_view_see_all = 2131230743;
+			public const int abc_action_mode_done = 2131230743;
 			
 			// aapt resource value: 0x7f080018
-			public const int abc_activitychooserview_choose_application = 2131230744;
+			public const int abc_activity_chooser_view_see_all = 2131230744;
 			
 			// aapt resource value: 0x7f080019
-			public const int abc_capital_off = 2131230745;
+			public const int abc_activitychooserview_choose_application = 2131230745;
 			
 			// aapt resource value: 0x7f08001a
-			public const int abc_capital_on = 2131230746;
-			
-			// aapt resource value: 0x7f080025
-			public const int abc_font_family_body_1_material = 2131230757;
-			
-			// aapt resource value: 0x7f080026
-			public const int abc_font_family_body_2_material = 2131230758;
-			
-			// aapt resource value: 0x7f080027
-			public const int abc_font_family_button_material = 2131230759;
-			
-			// aapt resource value: 0x7f080028
-			public const int abc_font_family_caption_material = 2131230760;
-			
-			// aapt resource value: 0x7f080029
-			public const int abc_font_family_display_1_material = 2131230761;
-			
-			// aapt resource value: 0x7f08002a
-			public const int abc_font_family_display_2_material = 2131230762;
-			
-			// aapt resource value: 0x7f08002b
-			public const int abc_font_family_display_3_material = 2131230763;
-			
-			// aapt resource value: 0x7f08002c
-			public const int abc_font_family_display_4_material = 2131230764;
-			
-			// aapt resource value: 0x7f08002d
-			public const int abc_font_family_headline_material = 2131230765;
-			
-			// aapt resource value: 0x7f08002e
-			public const int abc_font_family_menu_material = 2131230766;
-			
-			// aapt resource value: 0x7f08002f
-			public const int abc_font_family_subhead_material = 2131230767;
-			
-			// aapt resource value: 0x7f080030
-			public const int abc_font_family_title_material = 2131230768;
+			public const int abc_capital_off = 2131230746;
 			
 			// aapt resource value: 0x7f08001b
-			public const int abc_search_hint = 2131230747;
+			public const int abc_capital_on = 2131230747;
+			
+			// aapt resource value: 0x7f080026
+			public const int abc_font_family_body_1_material = 2131230758;
+			
+			// aapt resource value: 0x7f080027
+			public const int abc_font_family_body_2_material = 2131230759;
+			
+			// aapt resource value: 0x7f080028
+			public const int abc_font_family_button_material = 2131230760;
+			
+			// aapt resource value: 0x7f080029
+			public const int abc_font_family_caption_material = 2131230761;
+			
+			// aapt resource value: 0x7f08002a
+			public const int abc_font_family_display_1_material = 2131230762;
+			
+			// aapt resource value: 0x7f08002b
+			public const int abc_font_family_display_2_material = 2131230763;
+			
+			// aapt resource value: 0x7f08002c
+			public const int abc_font_family_display_3_material = 2131230764;
+			
+			// aapt resource value: 0x7f08002d
+			public const int abc_font_family_display_4_material = 2131230765;
+			
+			// aapt resource value: 0x7f08002e
+			public const int abc_font_family_headline_material = 2131230766;
+			
+			// aapt resource value: 0x7f08002f
+			public const int abc_font_family_menu_material = 2131230767;
+			
+			// aapt resource value: 0x7f080030
+			public const int abc_font_family_subhead_material = 2131230768;
+			
+			// aapt resource value: 0x7f080031
+			public const int abc_font_family_title_material = 2131230769;
 			
 			// aapt resource value: 0x7f08001c
-			public const int abc_searchview_description_clear = 2131230748;
+			public const int abc_search_hint = 2131230748;
 			
 			// aapt resource value: 0x7f08001d
-			public const int abc_searchview_description_query = 2131230749;
+			public const int abc_searchview_description_clear = 2131230749;
 			
 			// aapt resource value: 0x7f08001e
-			public const int abc_searchview_description_search = 2131230750;
+			public const int abc_searchview_description_query = 2131230750;
 			
 			// aapt resource value: 0x7f08001f
-			public const int abc_searchview_description_submit = 2131230751;
+			public const int abc_searchview_description_search = 2131230751;
 			
 			// aapt resource value: 0x7f080020
-			public const int abc_searchview_description_voice = 2131230752;
+			public const int abc_searchview_description_submit = 2131230752;
 			
 			// aapt resource value: 0x7f080021
-			public const int abc_shareactionprovider_share_with = 2131230753;
+			public const int abc_searchview_description_voice = 2131230753;
 			
 			// aapt resource value: 0x7f080022
-			public const int abc_shareactionprovider_share_with_application = 2131230754;
+			public const int abc_shareactionprovider_share_with = 2131230754;
 			
 			// aapt resource value: 0x7f080023
-			public const int abc_toolbar_collapse_description = 2131230755;
+			public const int abc_shareactionprovider_share_with_application = 2131230755;
+			
+			// aapt resource value: 0x7f080024
+			public const int abc_toolbar_collapse_description = 2131230756;
 			
 			// aapt resource value: 0x7f08003d
 			public const int app_name = 2131230781;
 			
-			// aapt resource value: 0x7f080031
-			public const int appbar_scrolling_view_behavior = 2131230769;
-			
 			// aapt resource value: 0x7f080032
-			public const int bottom_sheet_behavior = 2131230770;
+			public const int appbar_scrolling_view_behavior = 2131230770;
 			
 			// aapt resource value: 0x7f080033
-			public const int character_counter_pattern = 2131230771;
+			public const int bottom_sheet_behavior = 2131230771;
+			
+			// aapt resource value: 0x7f080034
+			public const int character_counter_pattern = 2131230772;
 			
 			// aapt resource value: 0x7f080001
 			public const int common_google_play_services_enable_button = 2131230721;
@@ -3968,29 +4094,29 @@ namespace YourStopWatch
 			// aapt resource value: 0x7f080042
 			public const int null_timer = 2131230786;
 			
-			// aapt resource value: 0x7f080034
-			public const int password_toggle_content_description = 2131230772;
-			
 			// aapt resource value: 0x7f080035
-			public const int path_password_eye = 2131230773;
+			public const int password_toggle_content_description = 2131230773;
 			
 			// aapt resource value: 0x7f080036
-			public const int path_password_eye_mask_strike_through = 2131230774;
+			public const int path_password_eye = 2131230774;
 			
 			// aapt resource value: 0x7f080037
-			public const int path_password_eye_mask_visible = 2131230775;
+			public const int path_password_eye_mask_strike_through = 2131230775;
 			
 			// aapt resource value: 0x7f080038
-			public const int path_password_strike_through = 2131230776;
-			
-			// aapt resource value: 0x7f080024
-			public const int search_menu_title = 2131230756;
+			public const int path_password_eye_mask_visible = 2131230776;
 			
 			// aapt resource value: 0x7f080039
-			public const int status_bar_notification_info_overflow = 2131230777;
+			public const int path_password_strike_through = 2131230777;
 			
-			// aapt resource value: 0x7f08003c
-			public const int title_activity_webview = 2131230780;
+			// aapt resource value: 0x7f080025
+			public const int search_menu_title = 2131230757;
+			
+			// aapt resource value: 0x7f08003a
+			public const int status_bar_notification_info_overflow = 2131230778;
+			
+			// aapt resource value: 0x7f080011
+			public const int title_activity_webview = 2131230737;
 			
 			// aapt resource value: 0x7f080041
 			public const int title_graphics = 2131230785;
@@ -4004,11 +4130,11 @@ namespace YourStopWatch
 			// aapt resource value: 0x7f08003e
 			public const int title_stopwatch = 2131230782;
 			
-			// aapt resource value: 0x7f080011
-			public const int v7_preference_off = 2131230737;
-			
 			// aapt resource value: 0x7f080012
-			public const int v7_preference_on = 2131230738;
+			public const int v7_preference_off = 2131230738;
+			
+			// aapt resource value: 0x7f080013
+			public const int v7_preference_on = 2131230739;
 			
 			static String()
 			{

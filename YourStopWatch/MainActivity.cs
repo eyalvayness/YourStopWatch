@@ -25,7 +25,7 @@ using Android.Runtime;
 namespace YourStopWatch
 {
     [Activity(Label = "@string/app_name", Theme = "@style/AppTheme", MainLauncher = true, ScreenOrientation = Android.Content.PM.ScreenOrientation.Portrait)]
-    public class MainActivity : Android.Support.V7.App.AppCompatActivity, BottomNavigationView.IOnNavigationItemSelectedListener, GoogleApiClient.IConnectionCallbacks, GoogleApiClient.IOnConnectionFailedListener
+    public class MainActivity : Android.Support.V7.App.AppCompatActivity, BottomNavigationView.IOnNavigationItemSelectedListener, GoogleApiClient.IOnConnectionFailedListener, GoogleApiClient.IConnectionCallbacks
     {
         LinearLayout outputContainer;
         GridLayout listButtonsGrid;
@@ -40,20 +40,20 @@ namespace YourStopWatch
         View addedView = null;
         TextView timerView;
         const string dbName = "SavedTimesDataBase.db3", settingsName = "AppSettings";
-        Dictionary<string, GraphicTimeLine> spinnerPossibilities = new Dictionary<string, GraphicTimeLine> { { "This Week", GraphicTimeLine.ThisWeek }, { "Last Week", GraphicTimeLine.LastWeek }, { "This Month", GraphicTimeLine.ThisMonth }, /*{ "Month", GraphicTimeLine.Month },*/ { "This Year", GraphicTimeLine.ThisYear } };
-        Dictionary<GraphicTimeLine, int> subDivPerTimeLine = new Dictionary<GraphicTimeLine, int> { { GraphicTimeLine.ThisWeek, 7 }, { GraphicTimeLine.LastWeek, 7 }, { GraphicTimeLine.ThisMonth, 4 }, { GraphicTimeLine.ThisYear, 12 } };
+        readonly Dictionary<string, GraphicTimeLine> spinnerPossibilities = new Dictionary<string, GraphicTimeLine> { { "This Week", GraphicTimeLine.ThisWeek }, { "Last Week", GraphicTimeLine.LastWeek }, { "This Month", GraphicTimeLine.ThisMonth }, /*{ "Month", GraphicTimeLine.Month },*/ { "This Year", GraphicTimeLine.ThisYear } };
+        readonly Dictionary<GraphicTimeLine, int> subDivPerTimeLine = new Dictionary<GraphicTimeLine, int> { { GraphicTimeLine.ThisWeek, 7 }, { GraphicTimeLine.LastWeek, 7 }, { GraphicTimeLine.ThisMonth, 4 }, { GraphicTimeLine.ThisYear, 12 } };
         readonly static string dbFolder = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), dbPath = System.IO.Path.Combine(dbFolder, dbName);
         bool showCircle, areSettingsUnlocked, showAverageHour;
         int milli = 0, sec = 0, min = 0, hour = 0, maxHour, bitmapLength, maxHourWeekly;
         const int maxSec = 60, maxMin = 60;
+        string userName = "evayness", userId = "001";
         float secOffset, minOffset, hourOffset;
 
-        public static MobileServiceClient MobileService = new MobileServiceClient("https://yourstopwatch.azurewebsites.net");
+        public static MobileServiceClient MobileService = new MobileServiceClient("https://yourstopwatchapp.azurewebsites.net");
 
         GoogleApiClient mGoogleApiClient;
-        GoogleSignInAccount account;
 
-        public const int SIGN_IN_ID = 9001;
+        public const int RC_SIGN_IN = 9001;
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
@@ -73,65 +73,57 @@ namespace YourStopWatch
             graphicsLayout = GraphicsLayoutSetup();
             settingsLayout = SettingsLayoutSetup();
 
+            if (userName == null && userId == null)
+                ConfigureGoogleSignIn();
+
+            CurrentPlatform.Init();
+
             StopWatchLayoutOutput();
+            MobileService.LoginAsync(MobileServiceAuthenticationProvider.WindowsAzureActiveDirectory, new Newtonsoft.Json.Linq.JObject());
 
             ToggleButtons(ButtonsState.End);
-
-
-            //CurrentPlatform.Init();
-            //TodoItem item = new TodoItem { Text = "This is a test" };
-            //MobileService.GetTable<TodoItem>().InsertAsync(item);
-            //ConfigureGoogleSignIn();
         }
 
         protected override void OnActivityResult(int requestCode, [GeneratedEnum] Result resultCode, Intent data)
         {
             base.OnActivityResult(requestCode, resultCode, data);
-            if (requestCode == SIGN_IN_ID)
+            if (requestCode == RC_SIGN_IN)
             {
                 var result = Auth.GoogleSignInApi.GetSignInResultFromIntent(data);
-                HandlesSignInResult(result);
+                HandleSingIn(result);
             }
         }
 
-        private void HandlesSignInResult(GoogleSignInResult result)
+        private void HandleSingIn(GoogleSignInResult result)
         {
             if (result.IsSuccess)
             {
-                account = result.SignInAccount;
+                userId = result.SignInAccount.Id;
+                userName = result.SignInAccount.DisplayName;
+                Toast.MakeText(this, $"You are now logged in as {userName}", ToastLength.Long).Show();
             }
         }
 
         private void ConfigureGoogleSignIn()
         {
-            GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DefaultSignIn).RequestEmail().Build();
+            var alert = new Android.Support.V7.App.AlertDialog.Builder(this);
+            alert.SetTitle("Log in")
+                .SetCancelable(false)
+                .SetMessage("In order to keep your recorded times between sessions, please log into the app with a google account.")
+                .SetPositiveButton("Log in", delegate
+                {
+                    GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DefaultSignIn).RequestEmail().Build();
 
-            mGoogleApiClient = new GoogleApiClient.Builder(this).EnableAutoManage(this, this).AddApi(Auth.GOOGLE_SIGN_IN_API, gso).AddConnectionCallbacks(this).Build();
+                    mGoogleApiClient = new GoogleApiClient.Builder(this).EnableAutoManage(this, this).AddApi(Auth.GOOGLE_SIGN_IN_API, gso).Build();
 
-            var signinIntent = Auth.GoogleSignInApi.GetSignInIntent(mGoogleApiClient);
-            StartActivityForResult(signinIntent, SIGN_IN_ID);
-        }
+                    var opr = Auth.GoogleSignInApi.SilentSignIn(mGoogleApiClient);
 
-        public void OnConnected(Bundle connectionHint)
-        {
-            //throw new NotImplementedException();
-        }
+                    var signinIntent = Auth.GoogleSignInApi.GetSignInIntent(mGoogleApiClient);
+                    StartActivityForResult(signinIntent, RC_SIGN_IN);
+                    mGoogleApiClient.Connect();
+                });
+            alert.Create().Show();
 
-        public void OnConnectionSuspended(int cause)
-        {
-            //throw new NotImplementedException();
-        }
-
-        public void OnConnectionFailed(ConnectionResult result)
-        {
-            //throw new NotImplementedException();
-        }
-
-        private async void AddItemTest()
-        {
-            CurrentPlatform.Init();
-            TodoItem item = new TodoItem { Text = "This is a test" };
-            await MobileService.GetTable<TodoItem>().InsertAsync(item);
         }
 
         protected override void OnResume()
@@ -232,6 +224,8 @@ namespace YourStopWatch
             areSettingsUnlocked = settings.GetBoolean("areSettingsUnlocked", true);
             showAverageHour = settings.GetBoolean("showAverageHour", true);
             maxHourWeekly = settings.GetInt("maxHourWeekly", 14);
+            userId = settings.GetString("userId", userId);
+            userName = settings.GetString("userName", userName);
 
             secOffset = bitmapLength / 5f;
             minOffset = bitmapLength / 10f;
@@ -261,6 +255,8 @@ namespace YourStopWatch
             settings.PutInt("timerMinutes", min);
             settings.PutInt("timerHours", hour);
             settings.PutInt("maxHourWeekly", maxHourWeekly);
+            settings.PutString("userId", userId);
+            settings.PutString("userName", userName);
 
             if (timer != null && keepActivity)
             {
@@ -334,13 +330,17 @@ namespace YourStopWatch
                     timePicker.Minute = 0;
                     timeBuilder.SetView(timePicker);
                     timeBuilder.SetNegativeButton("Cancel", delegate { return; });
-                    timeBuilder.SetPositiveButton("Save Time", delegate 
+                    timeBuilder.SetPositiveButton("Save Time", async delegate
                     {
-                        Time t = new Time { TimeSaved = new DateTime(datePicker.Year, datePicker.Month + 1, datePicker.DayOfMonth, timePicker.Hour, timePicker.Minute, 0) };
-                        var db = new SQLiteConnection(dbPath);
-                        db.CreateTable<Time>();
-                        db.Insert(t);
-                        db.Close();
+                        //Time t = new Time { SavedTime = new DateTime(datePicker.Year, datePicker.Month + 1, datePicker.DayOfMonth, timePicker.Hour, timePicker.Minute, 0) };
+                        //var db = new SQLiteConnection(dbPath);
+                        //db.CreateTable<Time>();
+                        //db.Insert(t);
+                        //db.Close();
+
+                        RegisteredTime t = new RegisteredTime { SavedTime = new DateTime(datePicker.Year, datePicker.Month + 1, datePicker.DayOfMonth, timePicker.Hour, timePicker.Minute, 0), TimeUserId = userId, createdAt = DateTime.Now};
+                        await MobileService.GetTable<RegisteredTime>().InsertAsync(t);
+
                         OutputListLayoutReset();
                     });
                     timeBuilder.Create().Show();
@@ -354,12 +354,17 @@ namespace YourStopWatch
                 alert.SetTitle("Confirmation");
                 alert.SetMessage("Do you really want to permanently delete all of the recorded times ?");
 
-                alert.SetPositiveButton("YES", delegate
+                alert.SetPositiveButton("YES", async delegate
                 {
-                    var db = new SQLiteConnection(dbPath);
-                    db.CreateTable<Time>();
-                    db.DropTable<Time>();
+                    //var db = new SQLiteConnection(dbPath);
+                    //db.CreateTable<Time>();
+                    //db.DropTable<Time>();
+                    var table = await MobileService.GetTable<RegisteredTime>().Where(t => t.TimeUserId == userId).ToEnumerableAsync();
+
+                    foreach (RegisteredTime t in table)
+                        await MobileService.GetTable<RegisteredTime>().DeleteAsync(t);
                     outputContainer.RemoveAllViews();
+                    outputContainer.AddView(listButtonsGrid);
                     resetAllButton.Enabled = false;
                 });
                 alert.SetNegativeButton("NO", delegate { return; });
@@ -516,7 +521,7 @@ namespace YourStopWatch
             UpdateGraphics(spinnerPossibilities[spinner.SelectedItem.ToString()]);
         }
 
-        private void UpdateGraphics(GraphicTimeLine timeLine)
+        private async void UpdateGraphics(GraphicTimeLine timeLine)
         {
             int subDiv = subDivPerTimeLine[timeLine];
             float averageLineHeight = GetAverageLineHeight(timeLine);
@@ -532,16 +537,18 @@ namespace YourStopWatch
             ColumnSeries subDivSeries = new ColumnSeries { FillColor = OxyColors.Green, StrokeColor = OxyColors.Green };
             ColumnSeries todaySeries = new ColumnSeries { FillColor = OxyColors.Orange, StrokeColor = OxyColors.Orange };
 
-            var db = new SQLiteConnection(dbPath);
-            db.CreateTable<Time>();
-            var table = db.Table<Time>();
+            //var db = new SQLiteConnection(dbPath);
+            //db.CreateTable<Time>();
+            //var table = db.Table<Time>();
+            var table = await MobileService.GetTable<RegisteredTime>().Where(t => t.TimeUserId == userId).OrderBy(t => t.SavedTime).ToEnumerableAsync();
+
 
             if (timeLine == GraphicTimeLine.ThisWeek)
             {
-                foreach (Time t in table)
+                foreach (RegisteredTime t in table)
                 {
-                    if ((t.TimeSaved.Year == DateTime.Now.Year || Math.Abs(t.TimeSaved.Year - DateTime.Now.Year) == 1) && GetWeekDiference(DateTime.Now, t.TimeSaved) == 0)
-                        hourPerSubDiv[GetDayOfWeek(t.TimeSaved)] += t.TimeSaved.Hour + t.TimeSaved.Minute / 60f;
+                    if ((t.SavedTime.Year == DateTime.Now.Year || Math.Abs(t.SavedTime.Year - DateTime.Now.Year) == 1) && GetWeekDiference(DateTime.Now, t.SavedTime) == 0)
+                        hourPerSubDiv[GetDayOfWeek(t.SavedTime)] += t.SavedTime.Hour + t.SavedTime.Minute / 60f;
                 }
 
                 for (int i = 0; i < subDiv; i++)
@@ -560,10 +567,10 @@ namespace YourStopWatch
             }
             if (timeLine == GraphicTimeLine.LastWeek)
             {
-                foreach (Time t in table)
+                foreach (RegisteredTime t in table)
                 {
-                    if ((t.TimeSaved.Year == DateTime.Now.Year || Math.Abs(t.TimeSaved.Year - DateTime.Now.Year) == 1) && GetWeekDiference(DateTime.Now.AddDays(-7), t.TimeSaved) == 0)
-                        hourPerSubDiv[GetDayOfWeek(t.TimeSaved)] += t.TimeSaved.Hour + t.TimeSaved.Minute / 60f;
+                    if ((t.SavedTime.Year == DateTime.Now.Year || Math.Abs(t.SavedTime.Year - DateTime.Now.Year) == 1) && GetWeekDiference(DateTime.Now.AddDays(-7), t.SavedTime) == 0)
+                        hourPerSubDiv[GetDayOfWeek(t.SavedTime)] += t.SavedTime.Hour + t.SavedTime.Minute / 60f;
                 }
 
                 for (int i = 0; i < subDiv; i++)
@@ -574,10 +581,10 @@ namespace YourStopWatch
             }
             else if (timeLine == GraphicTimeLine.ThisMonth)
             {
-                foreach (Time t in table)
+                foreach (RegisteredTime t in table)
                 {
-                    if ((t.TimeSaved.Year == DateTime.Now.Year || Math.Abs(t.TimeSaved.Year - DateTime.Now.Year) == 1) && GetWeekDiference(DateTime.Now, t.TimeSaved) < 4)
-                        hourPerSubDiv[3 - GetWeekDiference(DateTime.Now, t.TimeSaved)] += t.TimeSaved.Hour + t.TimeSaved.Minute / 60f;
+                    if ((t.SavedTime.Year == DateTime.Now.Year || Math.Abs(t.SavedTime.Year - DateTime.Now.Year) == 1) && GetWeekDiference(DateTime.Now, t.SavedTime) < 4)
+                        hourPerSubDiv[3 - GetWeekDiference(DateTime.Now, t.SavedTime)] += t.SavedTime.Hour + t.SavedTime.Minute / 60f;
                 }
 
                 for (int i = 0; i < subDiv; i++)
@@ -596,10 +603,10 @@ namespace YourStopWatch
             }
             else if (timeLine == GraphicTimeLine.ThisYear)
             {
-                foreach (Time t in table)
+                foreach (RegisteredTime t in table)
                 {
-                    if (t.TimeSaved.Year == DateTime.Now.Year)
-                        hourPerSubDiv[t.TimeSaved.Month - 1] += t.TimeSaved.Hour + t.TimeSaved.Minute / 60f;
+                    if (t.SavedTime.Year == DateTime.Now.Year)
+                        hourPerSubDiv[t.SavedTime.Month - 1] += t.SavedTime.Hour + t.SavedTime.Minute / 60f;
                 }
 
                 for (int i = 0; i < subDiv; i++)
@@ -733,40 +740,43 @@ namespace YourStopWatch
                 }
             };
 
-            stopButton.Click += delegate
+            stopButton.Click += async delegate
             {
                 ToggleButtons(ButtonsState.End);
-                Time savedTime = new Time
-                {
-                    TimeSaved = ExtractTimerSpan()
-                };
+                RegisteredTime t = new RegisteredTime { SavedTime = ExtractTimerSpan(), TimeUserId = userId, createdAt = DateTime.Now };
 
-                var db = new SQLiteConnection(dbPath);
-                db.CreateTable<Time>();
-                db.Insert(savedTime);
-                db.Close();
+                //var db = new SQLiteConnection(dbPath);
+                //db.CreateTable<Time>();
+                //db.Insert(savedTime);
+                //db.Close();
+                await MobileService.GetTable<RegisteredTime>().InsertAsync(t);
                 OutputListLayoutReset();
                 UpdateClock();
             };
         }
 
-        private void OutputListLayoutReset()
+        private async void OutputListLayoutReset()
         {
-            var db = new SQLiteConnection(dbPath);
-            db.CreateTable<Time>();
-            var table = db.Table<Time>().OrderBy(t => t.TimeSaved);
+            //var db = new SQLiteConnection(dbPath);
+            //db.CreateTable<Time>();
+            //var table = db.Table<Time>().OrderBy(t => t.SavedTime);
+            var table = await MobileService.GetTable<RegisteredTime>().Where(t => t.TimeUserId == userId).OrderBy(t => t.SavedTime).ThenBy(t => t.createdAt).ToEnumerableAsync();
             outputContainer.RemoveAllViews();
             outputContainer.AddView(listButtonsGrid);
 
             foreach (var t in table)
             {
-                if (Math.Abs(DateTime.Now.DayOfYear - t.TimeSaved.DayOfYear + 365 * (DateTime.Now.Year - t.TimeSaved.Year)) < 14)
-                    AddTimeToOutputList(t, new SQLiteConnection(dbPath));
+                if (Math.Abs(DateTime.Now.DayOfYear - t.SavedTime.DayOfYear + 365 * (DateTime.Now.Year - t.SavedTime.Year)) < 14)
+                    AddTimeToOutputList(t/*, new SQLiteConnection(dbPath)*/);
             }
-            db.Close();
+            if (outputContainer.ChildCount == 1)
+                listButtonsGrid.FindViewById<Button>(Resource.Id.resetAllButton).Enabled = false;
+            else
+                listButtonsGrid.FindViewById<Button>(Resource.Id.resetAllButton).Enabled = true;
+            //db.Close();
         }
 
-        private void AddTimeToOutputList(Time t, SQLiteConnection db)
+        private void AddTimeToOutputList(RegisteredTime t/*, SQLiteConnection db*/)
         {
             LayoutInflater inflater = (LayoutInflater)BaseContext.GetSystemService(Context.LayoutInflaterService);
             View timeView = inflater.Inflate(Resource.Layout.single_output_layout, null);
@@ -774,7 +784,7 @@ namespace YourStopWatch
             Button removeButton = timeView.FindViewById<Button>(Resource.Id.removeButton);
             outputContainer.AddView(timeView, outputContainer.IndexOfChild(listButtonsGrid));
 
-            textOutput.Text = string.Format("{0}\n{1}", t.TimeSaved.ToLongDateString(), t.TimeSaved.ToShortTimeString());
+            textOutput.Text = string.Format("{0}\n{1}", t.SavedTime.ToLongDateString(), t.SavedTime.ToShortTimeString());
 
             removeButton.Click += delegate
             {
@@ -782,12 +792,13 @@ namespace YourStopWatch
                 alert.SetTitle("Confirmation");
                 alert.SetMessage("Do you really want to permanently delete this recorded time ?");
 
-                alert.SetPositiveButton("YES", delegate
+                alert.SetPositiveButton("YES", async delegate
                 {
                     outputContainer.RemoveView(timeView);
-                    db.Delete<Time>(t.Id);
-                    db.Close();
-                    Toast.MakeText(this, $"The {t.TimeSaved.ToLongTimeString()} of {t.TimeSaved.ToShortDateString()} has been deleted.", ToastLength.Long).Show();
+                    await MobileService.GetTable<RegisteredTime>().DeleteAsync(t);
+                    //db.Delete<Time>(t.Id);
+                    //db.Close();
+                    Toast.MakeText(this, $"The {t.SavedTime.ToLongTimeString()} of {t.SavedTime.ToShortDateString()} has been deleted.", ToastLength.Long).Show();
                 });
                 alert.SetNegativeButton("NO", delegate { return; });
                 alert.Create().Show();
@@ -896,6 +907,21 @@ namespace YourStopWatch
             }
             return false;
         }
+
+        public void OnConnectionFailed(ConnectionResult result)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void OnConnected(Bundle connectionHint)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void OnConnectionSuspended(int cause)
+        {
+            throw new NotImplementedException();
+        }
     }
     
     public enum GraphicTimeLine
@@ -920,7 +946,15 @@ namespace YourStopWatch
         public string Text { get; set; }
     }
 
-    [Table("Times")]
+    public class RegisteredTime
+    {
+        public string Id { get; set; }
+        public DateTime SavedTime { get; set; }
+        public DateTime createdAt { get; set; }
+        public string TimeUserId { get; set; }
+    }
+
+    /*[Table("Times")]
     public class Time : INotifyPropertyChanged
     {
         private int _id;
@@ -931,12 +965,11 @@ namespace YourStopWatch
             set { this._id = value; OnPropertyChanged(nameof(Id)); }
         }
 
-        private DateTime _timeSaved;
-        [NotNull]
-        public DateTime TimeSaved
+        private DateTime _savedTime;
+        public DateTime SavedTime
         {
-            get { return _timeSaved; }
-            set { this._timeSaved = value; OnPropertyChanged(nameof(_timeSaved)); }
+            get { return _savedTime; }
+            set { this._savedTime = value; OnPropertyChanged(nameof(_savedTime)); }
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -944,6 +977,6 @@ namespace YourStopWatch
         {
             this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
-    }
+    }*/
 }
 
