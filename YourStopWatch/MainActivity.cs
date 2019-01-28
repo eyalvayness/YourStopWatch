@@ -50,8 +50,7 @@ namespace YourStopWatch
         string userName = "evayness", userId = "001";
         float secOffset, minOffset, hourOffset;
 
-        public static MobileServiceClient MobileService = new MobileServiceClient("https://yourstopwatchapp.azurewebsites.net");
-
+        MobileServiceClient client = new MobileServiceClient("https://yourstopwatchapp.azurewebsites.net");
         GoogleApiClient mGoogleApiClient;
 
         public const int RC_SIGN_IN = 9001;
@@ -68,28 +67,42 @@ namespace YourStopWatch
             navigation.SetOnNavigationItemSelectedListener(this);
 
             GetAndApplySettings();
-            
+
+            GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DefaultSignIn).RequestEmail().Build();
+            mGoogleApiClient = new GoogleApiClient.Builder(this).EnableAutoManage(this, this).AddApi(Auth.GOOGLE_SIGN_IN_API, gso).Build();
+
             stopwatchLayout = StopWatchLayoutSetup();
             listLayout = ListLayoutSetup();
             graphicsLayout = GraphicsLayoutSetup();
             settingsLayout = SettingsLayoutSetup();
 
-            ConfigureGoogleSignIn();
-            GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DefaultSignIn).RequestIdToken("958576441152-s9bqn0pe7rtrudo6kj5tv7pjp5pi6e0k.apps.googleusercontent.com").RequestEmail().Build();
-            mGoogleApiClient = new GoogleApiClient.Builder(this).EnableAutoManage(this, this).AddApi(Auth.GOOGLE_SIGN_IN_API, gso).Build();
 
             CurrentPlatform.Init();
 
             StopWatchLayoutOutput();
-            MobileService.LoginAsync(MobileServiceAuthenticationProvider.WindowsAzureActiveDirectory, new Newtonsoft.Json.Linq.JObject());
-
+            
             ToggleButtons(ButtonsState.End);
         }
 
         protected override void OnStart()
         {
             base.OnStart();
-            mGoogleApiClient.Connect();
+            var opr = Auth.GoogleSignInApi.SilentSignIn(mGoogleApiClient);
+            if (opr.IsDone)
+            {
+                var result = opr.Get() as GoogleSignInResult;
+                HandleSignInResult(result);
+            }
+        }
+
+        private void HandleSignInResult(GoogleSignInResult result)
+        {
+            if (result.IsSuccess)
+            {
+                var account = result.SignInAccount;
+                userId = account.Id;
+                userName = account.DisplayName;
+            }
         }
 
         protected override void OnActivityResult(int requestCode, [GeneratedEnum] Result resultCode, Intent data)
@@ -98,35 +111,8 @@ namespace YourStopWatch
             if (requestCode == RC_SIGN_IN)
             {
                 var result = Auth.GoogleSignInApi.GetSignInResultFromIntent(data);
-                HandleSingIn(result);
+                HandleSignInResult(result);
             }
-        }
-
-        private void HandleSingIn(GoogleSignInResult result)
-        {
-            if (result.IsSuccess)
-            {
-                userId = result.SignInAccount.Id;
-                userName = result.SignInAccount.DisplayName;
-                Toast.MakeText(this, $"You are now logged in as {userName}", ToastLength.Long).Show();
-            }
-        }
-
-        private void GooglePlusLogIn()
-        {
-            var signinIntent = Auth.GoogleSignInApi.GetSignInIntent(mGoogleApiClient);
-            StartActivityForResult(signinIntent, RC_SIGN_IN);
-        }
-
-        private void ConfigureGoogleSignIn()
-        {
-            var alert = new Android.Support.V7.App.AlertDialog.Builder(this);
-            alert.SetTitle("Log in")
-                .SetCancelable(false)
-                .SetMessage("In order to keep your recorded times between sessions, please log into the app with a google account in the settings page.")
-                .SetPositiveButton("OK", delegate { });
-            alert.Create().Show();
-
         }
 
         protected override void OnResume()
@@ -342,7 +328,7 @@ namespace YourStopWatch
                         //db.Close();
 
                         RegisteredTime t = new RegisteredTime { SavedTime = new DateTime(datePicker.Year, datePicker.Month + 1, datePicker.DayOfMonth, timePicker.Hour, timePicker.Minute, 0), TimeUserId = userId, createdAt = DateTime.Now};
-                        await MobileService.GetTable<RegisteredTime>().InsertAsync(t);
+                        await client.GetTable<RegisteredTime>().InsertAsync(t);
 
                         OutputListLayoutReset();
                     });
@@ -362,10 +348,10 @@ namespace YourStopWatch
                     //var db = new SQLiteConnection(dbPath);
                     //db.CreateTable<Time>();
                     //db.DropTable<Time>();
-                    var table = await MobileService.GetTable<RegisteredTime>().Where(t => t.TimeUserId == userId).ToEnumerableAsync();
+                    var table = await client.GetTable<RegisteredTime>().Where(t => t.TimeUserId == userId).ToEnumerableAsync();
 
                     foreach (RegisteredTime t in table)
-                        await MobileService.GetTable<RegisteredTime>().DeleteAsync(t);
+                        await client.GetTable<RegisteredTime>().DeleteAsync(t);
                     outputContainer.RemoveAllViews();
                     outputContainer.AddView(listButtonsGrid);
                     resetAllButton.Enabled = false;
@@ -424,7 +410,8 @@ namespace YourStopWatch
 
             loginButton.Click += delegate
             {
-                GooglePlusLogIn();
+                var signInIntent = Auth.GoogleSignInApi.GetSignInIntent(mGoogleApiClient);
+                StartActivityForResult(signInIntent, RC_SIGN_IN);
                 accountText.Text = $"You are logged in as {userName}";
             };
 
@@ -553,7 +540,7 @@ namespace YourStopWatch
             //var db = new SQLiteConnection(dbPath);
             //db.CreateTable<Time>();
             //var table = db.Table<Time>();
-            var table = await MobileService.GetTable<RegisteredTime>().Where(t => t.TimeUserId == userId).OrderBy(t => t.SavedTime).ToEnumerableAsync();
+            var table = await client.GetTable<RegisteredTime>().Where(t => t.TimeUserId == userId).OrderBy(t => t.SavedTime).ToEnumerableAsync();
 
 
             if (timeLine == GraphicTimeLine.ThisWeek)
@@ -762,7 +749,7 @@ namespace YourStopWatch
                 //db.CreateTable<Time>();
                 //db.Insert(savedTime);
                 //db.Close();
-                await MobileService.GetTable<RegisteredTime>().InsertAsync(t);
+                await client.GetTable<RegisteredTime>().InsertAsync(t);
                 OutputListLayoutReset();
                 UpdateClock();
             };
@@ -773,7 +760,7 @@ namespace YourStopWatch
             //var db = new SQLiteConnection(dbPath);
             //db.CreateTable<Time>();
             //var table = db.Table<Time>().OrderBy(t => t.SavedTime);
-            var table = await MobileService.GetTable<RegisteredTime>().Where(t => t.TimeUserId == userId).OrderBy(t => t.SavedTime).ThenBy(t => t.createdAt).ToEnumerableAsync();
+            var table = await client.GetTable<RegisteredTime>().Where(t => t.TimeUserId == userId).OrderBy(t => t.SavedTime).ThenBy(t => t.createdAt).ToEnumerableAsync();
             outputContainer.RemoveAllViews();
             outputContainer.AddView(listButtonsGrid);
 
@@ -808,7 +795,7 @@ namespace YourStopWatch
                 alert.SetPositiveButton("YES", async delegate
                 {
                     outputContainer.RemoveView(timeView);
-                    await MobileService.GetTable<RegisteredTime>().DeleteAsync(t);
+                    await client.GetTable<RegisteredTime>().DeleteAsync(t);
                     //db.Delete<Time>(t.Id);
                     //db.Close();
                     Toast.MakeText(this, $"The {t.SavedTime.ToLongTimeString()} of {t.SavedTime.ToShortDateString()} has been deleted.", ToastLength.Long).Show();
