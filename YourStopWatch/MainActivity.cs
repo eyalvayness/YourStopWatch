@@ -22,11 +22,12 @@ using Android.Gms.Auth.Api;
 using Android.Gms.Common;
 using Android.Runtime;
 using Xamarin.Auth;
+using System.Threading.Tasks;
 
 namespace YourStopWatch
 {
     [Activity(Label = "@string/app_name", Theme = "@style/AppTheme", MainLauncher = true, ScreenOrientation = Android.Content.PM.ScreenOrientation.Portrait)]
-    public class MainActivity : Android.Support.V7.App.AppCompatActivity, BottomNavigationView.IOnNavigationItemSelectedListener, GoogleApiClient.IOnConnectionFailedListener, GoogleApiClient.IConnectionCallbacks
+    public class MainActivity : Android.Support.V7.App.AppCompatActivity, BottomNavigationView.IOnNavigationItemSelectedListener
     {
         LinearLayout outputContainer;
         GridLayout listButtonsGrid;
@@ -44,18 +45,16 @@ namespace YourStopWatch
         readonly Dictionary<string, GraphicTimeLine> spinnerPossibilities = new Dictionary<string, GraphicTimeLine> { { "This Week", GraphicTimeLine.ThisWeek }, { "Last Week", GraphicTimeLine.LastWeek }, { "This Month", GraphicTimeLine.ThisMonth }, /*{ "Month", GraphicTimeLine.Month },*/ { "This Year", GraphicTimeLine.ThisYear } };
         readonly Dictionary<GraphicTimeLine, int> subDivPerTimeLine = new Dictionary<GraphicTimeLine, int> { { GraphicTimeLine.ThisWeek, 7 }, { GraphicTimeLine.LastWeek, 7 }, { GraphicTimeLine.ThisMonth, 4 }, { GraphicTimeLine.ThisYear, 12 } };
         readonly static string dbFolder = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), dbPath = System.IO.Path.Combine(dbFolder, dbName);
-        bool showCircle, areSettingsUnlocked, showAverageHour;
-        int milli = 0, sec = 0, min = 0, hour = 0, maxHour, bitmapLength, maxHourWeekly;
+        bool showCircle = true, areSettingsUnlocked = true, showAverageHour = true;
+        int milli = 0, sec = 0, min = 0, hour = 0;
+        int maxHour = 6, bitmapLength = 600, maxHourWeekly = 14;
         const int maxSec = 60, maxMin = 60;
-        string userName = "evayness", userId = "001";
         float secOffset, minOffset, hourOffset;
 
         MobileServiceClient client = new MobileServiceClient("https://yourstopwatchapp.azurewebsites.net");
-        GoogleApiClient mGoogleApiClient;
+        StopwatchUser currentUser = null;
 
-        public const int RC_SIGN_IN = 9001;
-
-        protected override void OnCreate(Bundle savedInstanceState)
+        protected override async void OnCreate(Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
             SetContentView(Resource.Layout.activity_main);
@@ -66,73 +65,37 @@ namespace YourStopWatch
             navigation = FindViewById<BottomNavigationView>(Resource.Id.bottomNavigation);
             navigation.SetOnNavigationItemSelectedListener(this);
 
-            GetAndApplySettings();
-
-            GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DefaultSignIn).RequestEmail().Build();
-            mGoogleApiClient = new GoogleApiClient.Builder(this).EnableAutoManage(this, this).AddApi(Auth.GOOGLE_SIGN_IN_API, gso).Build();
+            CurrentPlatform.Init();
+            await GetAndApplyUserAndSettings();
 
             stopwatchLayout = StopWatchLayoutSetup();
             listLayout = ListLayoutSetup();
             graphicsLayout = GraphicsLayoutSetup();
             settingsLayout = SettingsLayoutSetup();
 
-
-            CurrentPlatform.Init();
-
             StopWatchLayoutOutput();
             
             ToggleButtons(ButtonsState.End);
         }
 
-        protected override void OnStart()
-        {
-            base.OnStart();
-            var opr = Auth.GoogleSignInApi.SilentSignIn(mGoogleApiClient);
-            if (opr.IsDone)
-            {
-                var result = opr.Get() as GoogleSignInResult;
-                HandleSignInResult(result);
-            }
-        }
-
-        private void HandleSignInResult(GoogleSignInResult result)
-        {
-            if (result.IsSuccess)
-            {
-                var account = result.SignInAccount;
-                userId = account.Id;
-                userName = account.DisplayName;
-            }
-        }
-
-        protected override void OnActivityResult(int requestCode, [GeneratedEnum] Result resultCode, Intent data)
-        {
-            base.OnActivityResult(requestCode, resultCode, data);
-            if (requestCode == RC_SIGN_IN)
-            {
-                var result = Auth.GoogleSignInApi.GetSignInResultFromIntent(data);
-                HandleSignInResult(result);
-            }
-        }
-
-        protected override void OnResume()
+        protected override async void OnResume()
         {
             base.OnResume();
 
-            if (GetAndApplySettings())
+            if (await GetAndApplyUserAndSettings())
                 UpdateTimerFromAbsoluteReference();
         }
 
         protected override void OnPause()
         {
             base.OnPause();
-            SaveSettings(true);
+            SaveUserAndSettings(true);
         }
 
         protected override void OnDestroy()
         {
             base.OnDestroy();
-            SaveSettings(false);
+            SaveUserAndSettings(false);
         }
 
         private void UpdateTimerFromAbsoluteReference()
@@ -200,21 +163,39 @@ namespace YourStopWatch
             timer.AutoReset = true;
         }
 
-        private bool GetAndApplySettings()
+        private async Task<bool> GetAndApplyUserAndSettings()
         {
             var settings = Application.Context.GetSharedPreferences(settingsName, FileCreationMode.Private);
-            bitmapLength = settings.GetInt("bitmapLength", 500);
-            maxHour = settings.GetInt("maxHour", 6);
+            string userId = settings.GetString("userId", null);
+            if (userId == null)
+            {
+                var dialog = new Android.Support.V7.App.AlertDialog.Builder(this).Create();
+                dialog.SetTitle("No user connected");
+                dialog.SetCancelable(false);
+                dialog.SetMessage("In order to register any recorded time, please log in or register to the app");
+                dialog.SetButton((int)DialogButtonType.Positive, "Log in", (EventHandler<DialogClickEventArgs>)null);
+                dialog.SetButton((int)DialogButtonType.Neutral, "Sign In", SigninStopwatchUser);
+
+                dialog.Show();
+            }
+            List<StopwatchUser> tempList = await client.GetTable<StopwatchUser>().Where(user => user.Id == userId).ToListAsync();
+            if (tempList.Count > 0)
+                currentUser = tempList.ToArray()[0];
+
+            if (currentUser != null)
+            {
+                bitmapLength = currentUser.PersonnalSettings.BitmapLength;
+                maxHour = currentUser.PersonnalSettings.MaxHour;
+                showCircle = currentUser.PersonnalSettings.ShowCircle;
+                areSettingsUnlocked = currentUser.PersonnalSettings.AreSettingsUnlock;
+                showAverageHour = currentUser.PersonnalSettings.ShowAverageHour;
+                maxHourWeekly = currentUser.PersonnalSettings.MaxHourWeekly;
+            }
+
             milli = settings.GetInt("timerMilliseconds", 0);
             sec = settings.GetInt("timerSeconds", 0);
             min = settings.GetInt("timerMinutes", 0);
             hour = settings.GetInt("timerHours", 0);
-            showCircle = settings.GetBoolean("showCircle", true);
-            areSettingsUnlocked = settings.GetBoolean("areSettingsUnlocked", true);
-            showAverageHour = settings.GetBoolean("showAverageHour", true);
-            maxHourWeekly = settings.GetInt("maxHourWeekly", 14);
-            userId = settings.GetString("userId", userId);
-            userName = settings.GetString("userName", userName);
 
             secOffset = bitmapLength / 5f;
             minOffset = bitmapLength / 10f;
@@ -234,18 +215,30 @@ namespace YourStopWatch
             return wasTimerRunning;
         }
 
-        private void SaveSettings(bool keepActivity)
+        private void SigninStopwatchUser(object sender, EventArgs e)
+        {
+            ((AlertDialog)sender).Dismiss();
+            View signInLayout = ((LayoutInflater)BaseContext.GetSystemService(Context.LayoutInflaterService)).Inflate(Resource.Layout.sign_in_layout, null);
+            var dialog2 = new Android.Support.V7.App.AlertDialog.Builder(this).Create();
+            dialog2.SetTitle("Sign In");
+            dialog2.SetView(signInLayout);
+            dialog2.SetCancelable(false);
+            dialog2.SetButton((int)DialogButtonType.Positive, "Sign in", delegate { dialog2.Cancel(); dialog2.Dismiss(); dialog2.Dispose(); });
+
+            dialog2.Create();
+            dialog2.Show();
+        }
+
+        private async void SaveUserAndSettings(bool keepActivity)
         {
             var settings = Application.Context.GetSharedPreferences(settingsName, FileCreationMode.Private).Edit();
-            settings.PutInt("bitmapLength", bitmapLength);
-            settings.PutInt("maxHour", maxHour);
             settings.PutInt("timerMillisenconds", milli);
             settings.PutInt("timerSeconds", sec);
             settings.PutInt("timerMinutes", min);
             settings.PutInt("timerHours", hour);
-            settings.PutInt("maxHourWeekly", maxHourWeekly);
-            settings.PutString("userId", userId);
-            settings.PutString("userName", userName);
+            settings.PutString("userId", currentUser?.Id);
+            if (currentUser != null)
+                await client.GetTable<StopwatchUser>().RefreshAsync(currentUser);
 
             if (timer != null && keepActivity)
             {
@@ -258,9 +251,6 @@ namespace YourStopWatch
             else
                 settings.PutBoolean("isTimerRunning", false);
 
-            settings.PutBoolean("showAverageHour", showAverageHour);
-            settings.PutBoolean("areSettingsUnlocked", areSettingsUnlocked);
-            settings.PutBoolean("showCircle", showCircle);
             settings.Commit();
         }
 
@@ -326,8 +316,9 @@ namespace YourStopWatch
                         //db.CreateTable<Time>();
                         //db.Insert(t);
                         //db.Close();
-
-                        RegisteredTime t = new RegisteredTime { SavedTime = new DateTime(datePicker.Year, datePicker.Month + 1, datePicker.DayOfMonth, timePicker.Hour, timePicker.Minute, 0), TimeUserId = userId, createdAt = DateTime.Now};
+                        if (currentUser == null)
+                            return;
+                        RegisteredTime t = new RegisteredTime { SavedTime = new DateTime(datePicker.Year, datePicker.Month + 1, datePicker.DayOfMonth, timePicker.Hour, timePicker.Minute, 0), TimeUserId = currentUser.Id, createdAt = DateTime.Now};
                         await client.GetTable<RegisteredTime>().InsertAsync(t);
 
                         OutputListLayoutReset();
@@ -348,7 +339,9 @@ namespace YourStopWatch
                     //var db = new SQLiteConnection(dbPath);
                     //db.CreateTable<Time>();
                     //db.DropTable<Time>();
-                    var table = await client.GetTable<RegisteredTime>().Where(t => t.TimeUserId == userId).ToEnumerableAsync();
+                    if (currentUser == null)
+                        return;
+                    var table = await client.GetTable<RegisteredTime>().Where(t => t.TimeUserId == currentUser.Id).ToEnumerableAsync();
 
                     foreach (RegisteredTime t in table)
                         await client.GetTable<RegisteredTime>().DeleteAsync(t);
@@ -408,11 +401,18 @@ namespace YourStopWatch
                 maxWeeklyEdit.Enabled = areSettingsUnlocked;
             };
 
+            if (currentUser != null && currentUser.Name != null)
+            {
+                accountText.Text = $"You are logged in as {currentUser.Name}";
+                loginButton.Enabled = false;
+                loginButton.Text = "Logged in";
+            }
+
             loginButton.Click += delegate
             {
-                var signInIntent = Auth.GoogleSignInApi.GetSignInIntent(mGoogleApiClient);
-                StartActivityForResult(signInIntent, RC_SIGN_IN);
-                accountText.Text = $"You are logged in as {userName}";
+                accountText.Text = $"You are logged in as \n{currentUser.Name}";
+                loginButton.Enabled = false;
+                loginButton.Text = "Logged in";
             };
 
             switchShowAverage.Checked = showAverageHour;
@@ -540,86 +540,88 @@ namespace YourStopWatch
             //var db = new SQLiteConnection(dbPath);
             //db.CreateTable<Time>();
             //var table = db.Table<Time>();
-            var table = await client.GetTable<RegisteredTime>().Where(t => t.TimeUserId == userId).OrderBy(t => t.SavedTime).ToEnumerableAsync();
-
-
-            if (timeLine == GraphicTimeLine.ThisWeek)
+            if (currentUser != null)
             {
-                foreach (RegisteredTime t in table)
+                var table = await client.GetTable<RegisteredTime>().Where(t => t.TimeUserId == currentUser.Id).OrderBy(t => t.SavedTime).ToEnumerableAsync();
+    
+                if (timeLine == GraphicTimeLine.ThisWeek)
                 {
-                    if ((t.SavedTime.Year == DateTime.Now.Year || Math.Abs(t.SavedTime.Year - DateTime.Now.Year) == 1) && GetWeekDiference(DateTime.Now, t.SavedTime) == 0)
-                        hourPerSubDiv[GetDayOfWeek(t.SavedTime)] += t.SavedTime.Hour + t.SavedTime.Minute / 60f;
-                }
-
-                for (int i = 0; i < subDiv; i++)
-                {
-                    if (i == GetDayOfWeek(DateTime.Now))
+                    foreach (RegisteredTime t in table)
                     {
-                        todaySeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
-                        todaySeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
+                        if ((t.SavedTime.Year == DateTime.Now.Year || Math.Abs(t.SavedTime.Year - DateTime.Now.Year) == 1) && GetWeekDiference(DateTime.Now, t.SavedTime) == 0)
+                            hourPerSubDiv[GetDayOfWeek(t.SavedTime)] += t.SavedTime.Hour + t.SavedTime.Minute / 60f;
                     }
-                    else
+    
+                    for (int i = 0; i < subDiv; i++)
                     {
-                        subDivSeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
-                        subDivSeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
+                        if (i == GetDayOfWeek(DateTime.Now))
+                        {
+                            todaySeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
+                            todaySeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
+                        }
+                        else
+                        {
+                            subDivSeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
+                            subDivSeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
+                        }
                     }
                 }
-            }
-            if (timeLine == GraphicTimeLine.LastWeek)
-            {
-                foreach (RegisteredTime t in table)
+                if (timeLine == GraphicTimeLine.LastWeek)
                 {
-                    if ((t.SavedTime.Year == DateTime.Now.Year || Math.Abs(t.SavedTime.Year - DateTime.Now.Year) == 1) && GetWeekDiference(DateTime.Now.AddDays(-7), t.SavedTime) == 0)
-                        hourPerSubDiv[GetDayOfWeek(t.SavedTime)] += t.SavedTime.Hour + t.SavedTime.Minute / 60f;
-                }
-
-                for (int i = 0; i < subDiv; i++)
-                {
-                    subDivSeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
-                    subDivSeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
-                }
-            }
-            else if (timeLine == GraphicTimeLine.ThisMonth)
-            {
-                foreach (RegisteredTime t in table)
-                {
-                    if ((t.SavedTime.Year == DateTime.Now.Year || Math.Abs(t.SavedTime.Year - DateTime.Now.Year) == 1) && GetWeekDiference(DateTime.Now, t.SavedTime) < 4)
-                        hourPerSubDiv[3 - GetWeekDiference(DateTime.Now, t.SavedTime)] += t.SavedTime.Hour + t.SavedTime.Minute / 60f;
-                }
-
-                for (int i = 0; i < subDiv; i++)
-                {
-                    if (i + 1 == subDiv)
+                    foreach (RegisteredTime t in table)
                     {
-                        todaySeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
-                        todaySeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
+                        if ((t.SavedTime.Year == DateTime.Now.Year || Math.Abs(t.SavedTime.Year - DateTime.Now.Year) == 1) && GetWeekDiference(DateTime.Now.AddDays(-7), t.SavedTime) == 0)
+                            hourPerSubDiv[GetDayOfWeek(t.SavedTime)] += t.SavedTime.Hour + t.SavedTime.Minute / 60f;
                     }
-                    else
+    
+                    for (int i = 0; i < subDiv; i++)
                     {
                         subDivSeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
                         subDivSeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
                     }
                 }
-            }
-            else if (timeLine == GraphicTimeLine.ThisYear)
-            {
-                foreach (RegisteredTime t in table)
+                else if (timeLine == GraphicTimeLine.ThisMonth)
                 {
-                    if (t.SavedTime.Year == DateTime.Now.Year)
-                        hourPerSubDiv[t.SavedTime.Month - 1] += t.SavedTime.Hour + t.SavedTime.Minute / 60f;
-                }
-
-                for (int i = 0; i < subDiv; i++)
-                {
-                    if (i + 1 == DateTime.Now.Month)
+                    foreach (RegisteredTime t in table)
                     {
-                        todaySeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
-                        todaySeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
+                        if ((t.SavedTime.Year == DateTime.Now.Year || Math.Abs(t.SavedTime.Year - DateTime.Now.Year) == 1) && GetWeekDiference(DateTime.Now, t.SavedTime) < 4)
+                            hourPerSubDiv[3 - GetWeekDiference(DateTime.Now, t.SavedTime)] += t.SavedTime.Hour + t.SavedTime.Minute / 60f;
                     }
-                    else
+    
+                    for (int i = 0; i < subDiv; i++)
                     {
-                        subDivSeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
-                        subDivSeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
+                        if (i + 1 == subDiv)
+                        {
+                            todaySeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
+                            todaySeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
+                        }
+                        else
+                        {
+                            subDivSeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
+                            subDivSeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
+                        }
+                    }
+                }
+                else if (timeLine == GraphicTimeLine.ThisYear)
+                {
+                    foreach (RegisteredTime t in table)
+                    {
+                        if (t.SavedTime.Year == DateTime.Now.Year)
+                            hourPerSubDiv[t.SavedTime.Month - 1] += t.SavedTime.Hour + t.SavedTime.Minute / 60f;
+                    }
+    
+                    for (int i = 0; i < subDiv; i++)
+                    {
+                        if (i + 1 == DateTime.Now.Month)
+                        {
+                            todaySeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
+                            todaySeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
+                        }
+                        else
+                        {
+                            subDivSeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
+                            subDivSeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
+                        }
                     }
                 }
             }
@@ -743,13 +745,18 @@ namespace YourStopWatch
             stopButton.Click += async delegate
             {
                 ToggleButtons(ButtonsState.End);
-                RegisteredTime t = new RegisteredTime { SavedTime = ExtractTimerSpan(), TimeUserId = userId, createdAt = DateTime.Now };
+                if (currentUser != null)
+                {
+                    RegisteredTime t = new RegisteredTime { SavedTime = ExtractTimerSpan(), TimeUserId = currentUser.Id, createdAt = DateTime.Now };
+                    //var db = new SQLiteConnection(dbPath);
+                    //db.CreateTable<Time>();
+                    //db.Insert(item);
+                    //db.Close();
+                    await client.GetTable<RegisteredTime>().InsertAsync(t);
+                }
+                else
+                    ExtractTimerSpan();
 
-                //var db = new SQLiteConnection(dbPath);
-                //db.CreateTable<Time>();
-                //db.Insert(savedTime);
-                //db.Close();
-                await client.GetTable<RegisteredTime>().InsertAsync(t);
                 OutputListLayoutReset();
                 UpdateClock();
             };
@@ -760,7 +767,9 @@ namespace YourStopWatch
             //var db = new SQLiteConnection(dbPath);
             //db.CreateTable<Time>();
             //var table = db.Table<Time>().OrderBy(t => t.SavedTime);
-            var table = await client.GetTable<RegisteredTime>().Where(t => t.TimeUserId == userId).OrderBy(t => t.SavedTime).ThenBy(t => t.createdAt).ToEnumerableAsync();
+            if (currentUser == null)
+                return;
+            var table = await client.GetTable<RegisteredTime>().Where(t => t.TimeUserId == currentUser.Id).OrderBy(t => t.SavedTime).ThenBy(t => t.createdAt).ToEnumerableAsync();
             outputContainer.RemoveAllViews();
             outputContainer.AddView(listButtonsGrid);
 
@@ -907,21 +916,6 @@ namespace YourStopWatch
             }
             return false;
         }
-
-        public void OnConnectionFailed(ConnectionResult result)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void OnConnected(Bundle connectionHint)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void OnConnectionSuspended(int cause)
-        {
-            throw new NotImplementedException();
-        }
     }
     
     public enum GraphicTimeLine
@@ -940,10 +934,21 @@ namespace YourStopWatch
         Pause
     }
 
-    public class TodoItem
+    public class StopwatchUser
     {
         public string Id { get; set; }
-        public string Text { get; set; }
+        public string Name { get; set; }
+        public StopwatchSettings PersonnalSettings { get; set; }
+    }
+
+    public class StopwatchSettings
+    {
+        public int MaxHour { get; set; }
+        public int MaxHourWeekly { get; set; }
+        public int BitmapLength { get; set; }
+        public bool ShowAverageHour { get; set; }
+        public bool ShowCircle { get; set; }
+        public bool AreSettingsUnlock { get; set; }
     }
 
     public class RegisteredTime
