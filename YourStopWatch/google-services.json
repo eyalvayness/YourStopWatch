@@ -1,10 +1,1 @@
-{
-  "installed": {
-    "client_id": "958576441152-s9bqn0pe7rtrudo6kj5tv7pjp5pi6e0k.apps.googleusercontent.com",
-    "project_id": "your-stopwatch",
-    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-    "token_uri": "https://oauth2.googleapis.com/token",
-    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-    "redirect_uris": [ "urn:ietf:wg:oauth:2.0:oob", "http://localhost" ]
-  }
-}
+{"installed":{"client_id":"958576441152-0b7sivq2ukc0915ftrrkhb0uucjnl8e5.apps.googleusercontent.com","project_id":"your-stopwatch","auth_uri":"https://accounts.google.com/o/oauth2/auth","token_uri":"https://oauth2.googleapis.com/token","auth_provider_x509_cert_url":"https://www.googleapis.com/oauth2/v1/certs","redirect_uris":["urn:ietf:wg:oauth:2.0:oob","http://localhost"]}}

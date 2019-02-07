@@ -68,14 +68,13 @@ namespace YourStopWatch
 
             GetAndApplySettings();
 
-            GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DefaultSignIn).RequestEmail().Build();
+            GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DefaultSignIn).RequestIdToken("958576441152-0b7sivq2ukc0915ftrrkhb0uucjnl8e5.apps.googleusercontent.com").RequestEmail().Build();
             mGoogleApiClient = new GoogleApiClient.Builder(this).EnableAutoManage(this, this).AddApi(Auth.GOOGLE_SIGN_IN_API, gso).Build();
 
             stopwatchLayout = StopWatchLayoutSetup();
             listLayout = ListLayoutSetup();
             graphicsLayout = GraphicsLayoutSetup();
             settingsLayout = SettingsLayoutSetup();
-
 
             CurrentPlatform.Init();
 
