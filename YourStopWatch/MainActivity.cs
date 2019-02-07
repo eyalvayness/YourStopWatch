@@ -54,7 +54,7 @@ namespace YourStopWatch
         MobileServiceClient client = new MobileServiceClient("https://yourstopwatchapp.azurewebsites.net");
         StopwatchUser currentUser = null;
 
-        protected override async void OnCreate(Bundle savedInstanceState)
+        protected override void OnCreate(Bundle savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
             SetContentView(Resource.Layout.activity_main);
@@ -66,29 +66,25 @@ namespace YourStopWatch
             navigation.SetOnNavigationItemSelectedListener(this);
 
             CurrentPlatform.Init();
-            await GetAndApplyUserAndSettings();
+            GetAndApplySettings();
+            GetAndApplyUser();
 
             stopwatchLayout = StopWatchLayoutSetup();
             listLayout = ListLayoutSetup();
             graphicsLayout = GraphicsLayoutSetup();
-            settingsLayout = SettingsLayoutSetup(forRefresh: false);
+            settingsLayout = SettingsLayoutSetup();
 
             StopWatchLayoutOutput();
             
             ToggleButtons(ButtonsState.End);
         }
 
-        protected override async void OnResume()
+        protected override void OnResume()
         {
             base.OnResume();
 
-            if (!OnCreated)
-            {
-                if (await GetAndApplyUserAndSettings())
+            if (GetAndApplySettings())
                     UpdateTimerFromAbsoluteReference();
-            }
-            else
-                OnCreated = false;
         }
 
         protected override void OnPause()
@@ -168,7 +164,41 @@ namespace YourStopWatch
             timer.AutoReset = true;
         }
 
-        private async Task<bool> GetAndApplyUserAndSettings()
+        private bool GetAndApplySettings()
+        {
+            var settings = Application.Context.GetSharedPreferences(settingsName, FileCreationMode.Private);
+
+            milli = settings.GetInt("timerMilliseconds", 0);
+            sec = settings.GetInt("timerSeconds", 0);
+            min = settings.GetInt("timerMinutes", 0);
+            hour = settings.GetInt("timerHours", 0);
+
+            bitmapLength = settings.GetInt("bitmapLength", 600);
+            maxHour = settings.GetInt("maxHour", 6);
+            maxHourWeekly = settings.GetInt("maxHourWeekly", 14);
+            showAverageHour = settings.GetBoolean("showAverageHour", true);
+            showCircle = settings.GetBoolean("showCircle", true);
+            areSettingsUnlocked = settings.GetBoolean("areSettingsUnlocked", true);
+
+            secOffset = bitmapLength / 5f;
+            minOffset = bitmapLength / 10f;
+            hourOffset = 0;
+
+            bool wasTimerRunning = settings.GetBoolean("isTimerRunning", false);
+
+            oldTimer = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, hour, min, sec, milli);
+
+            if (wasTimerRunning)
+                absoluteRef = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day,
+            settings.GetInt("refHours", 0),
+            settings.GetInt("refMinutes", 0),
+            settings.GetInt("refSeconds", 0),
+            settings.GetInt("refMilliseconds", 0));
+
+            return wasTimerRunning;
+        }
+
+        private async void GetAndApplyUser()
         {
             var settings = Application.Context.GetSharedPreferences(settingsName, FileCreationMode.Private);
             string userId = settings.GetString("userId", null);
@@ -182,58 +212,11 @@ namespace YourStopWatch
                 if (tempList.Count > 0)
                     currentUser = tempList.ToArray()[0];
                 Toast.MakeText(this, $"You are now logged in as \"{currentUser.Name}\"", ToastLength.Long).Show();
-                SettingsLayoutSetup(forRefresh: true);
             }
-
-            if (currentUser != null)
-            {
-                bitmapLength = currentUser.BitmapLength;
-                maxHour = currentUser.MaxHour;
-                showCircle = currentUser.ShowCircle;
-                areSettingsUnlocked = currentUser.AreSettingsUnlock;
-                showAverageHour = currentUser.ShowAverageHour;
-                maxHourWeekly = currentUser.MaxHourWeekly;
-            }
-
-            milli = settings.GetInt("timerMilliseconds", 0);
-            sec = settings.GetInt("timerSeconds", 0);
-            min = settings.GetInt("timerMinutes", 0);
-            hour = settings.GetInt("timerHours", 0);
-
-            secOffset = bitmapLength / 5f;
-            minOffset = bitmapLength / 10f;
-            hourOffset = 0;
-
-            bool wasTimerRunning = settings.GetBoolean("isTimerRunning", false);
-
-            oldTimer = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, hour, min, sec, milli);
-
-            if (wasTimerRunning)
-                absoluteRef = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day,
-            settings.GetInt("refMilliseconds", 0),
-            settings.GetInt("refSeconds", 0),
-            settings.GetInt("refMinutes", 0),
-            settings.GetInt("refHours", 0));
-
-            return wasTimerRunning;
-        }
-
-        private async void RefreshUserSettings()
-        {
-            if (currentUser == null)
-                return;
-            currentUser.BitmapLength = bitmapLength;
-            currentUser.MaxHour = maxHour;
-            currentUser.ShowCircle = showCircle;
-            currentUser.AreSettingsUnlock = areSettingsUnlocked;
-            currentUser.ShowAverageHour = showAverageHour;
-            currentUser.MaxHourWeekly = maxHourWeekly;
-            await client.GetTable<StopwatchUser>().UpdateAsync(currentUser);
         }
 
         private void SignOrLogInStopwatchUser(bool cancelable)
         {
-            RefreshUserSettings();
             var alert = new Android.Support.V7.App.AlertDialog.Builder(this);
             alert.SetTitle("No user connected");
             alert.SetCancelable(cancelable);
@@ -262,16 +245,7 @@ namespace YourStopWatch
                     }
                     else
                     {
-                        currentUser = new StopwatchUser
-                        {
-                            Name = userName,
-                            AreSettingsUnlock = true,
-                            MaxHour = 6,
-                            BitmapLength = 600,
-                            MaxHourWeekly = 14,
-                            ShowAverageHour = true,
-                            ShowCircle = true
-                        };
+                        currentUser = new StopwatchUser { Name = userName };
                         await client.GetTable<StopwatchUser>().InsertAsync(currentUser);
                         RunOnUiThread(() =>
                         {
@@ -280,7 +254,6 @@ namespace YourStopWatch
                                 settingsLayout.FindViewById<TextView>(Resource.Id.setting_account).Text = $"You are logged in as \"{currentUser.Name}\"";
                         });
                     }
-                    SettingsLayoutSetup(forRefresh: true);
                 });
                 alert2.Create().Show();
             });
@@ -296,7 +269,13 @@ namespace YourStopWatch
             settings.PutInt("timerHours", hour);
             settings.PutString("userId", currentUser?.Id);
 
-            RefreshUserSettings();
+
+            settings.PutInt("bitmapLength", bitmapLength);
+            settings.PutInt("maxHour", maxHour);
+            settings.PutInt("maxHourWeekly", maxHourWeekly);
+            settings.PutBoolean("showAverageHour", showAverageHour);
+            settings.PutBoolean("showCircle", showCircle);
+            settings.PutBoolean("areSettingsUnlocked", areSettingsUnlocked);
 
             if (timer != null && keepActivity)
             {
@@ -427,7 +406,7 @@ namespace YourStopWatch
             return layout;
         }
 
-        private RelativeLayout SettingsLayoutSetup(bool forRefresh)
+        private RelativeLayout SettingsLayoutSetup()
         {
             RelativeLayout layout = (RelativeLayout)((LayoutInflater)BaseContext.GetSystemService(Context.LayoutInflaterService)).Inflate(Resource.Layout.settings_layout, null);
             SeekBar radiusSB = layout.FindViewById<SeekBar>(Resource.Id.radius_seek_bar);
@@ -439,39 +418,26 @@ namespace YourStopWatch
             Switch switchBoxShowCircle = layout.FindViewById<Switch>(Resource.Id.show_circle_checkbox);
             Switch switchShowAverage = layout.FindViewById<Switch>(Resource.Id.show_average_hour);
             Switch lockParams = layout.FindViewById<Switch>(Resource.Id.lock_params);
+            
 
-            RunOnUiThread(() => 
-            {
-                if (forRefresh)
-                {
-                    bitmapLength = currentUser.BitmapLength;
-                    maxHour = currentUser.MaxHour;
-                    showCircle = currentUser.ShowCircle;
-                    areSettingsUnlocked = currentUser.AreSettingsUnlock;
-                    showAverageHour = currentUser.ShowAverageHour;
-                    maxHourWeekly = currentUser.MaxHourWeekly;
-                }
-
-                lockParams.Checked = !areSettingsUnlocked;
-                radiusSB.Enabled = areSettingsUnlocked;
-                switchBoxShowCircle.Enabled = areSettingsUnlocked;
-                maxHourPicker.Enabled = areSettingsUnlocked;
-                maxWeeklyEdit.Enabled = areSettingsUnlocked;
-                switchShowAverage.Enabled = areSettingsUnlocked;
-                    
-                switchShowAverage.Checked = showAverageHour;
-                maxWeeklyEdit.Text = maxHourWeekly.ToString();
-                maxHourPicker.Value = maxHour;
-                radiusSB.SetProgress(bitmapLength, true);
-                radiusSBValue.Text = radiusSB.Progress.ToString() + "px";
-                switchBoxShowCircle.Checked = showCircle;
-            });
-
-            if (forRefresh)
-                return null;
-
+            lockParams.Checked = !areSettingsUnlocked;
+            radiusSB.Enabled = areSettingsUnlocked;
+            switchBoxShowCircle.Enabled = areSettingsUnlocked;
+            maxHourPicker.Enabled = areSettingsUnlocked;
+            maxWeeklyEdit.Enabled = areSettingsUnlocked;
+            loginButton.Enabled = areSettingsUnlocked;
+            switchShowAverage.Enabled = areSettingsUnlocked;
+                
+            switchShowAverage.Checked = showAverageHour;
+            maxWeeklyEdit.Text = maxHourWeekly.ToString();
+            maxHourPicker.Value = maxHour;
+            radiusSB.SetProgress(bitmapLength, true);
+            radiusSBValue.Text = radiusSB.Progress.ToString() + "px";
+            switchBoxShowCircle.Checked = showCircle;
+            
             lockParams.CheckedChange += delegate
             {
+                loginButton.Enabled = areSettingsUnlocked;
                 areSettingsUnlocked = !lockParams.Checked;
                 radiusSB.Enabled = areSettingsUnlocked;
                 switchShowAverage.Enabled = areSettingsUnlocked;
@@ -1009,15 +975,8 @@ namespace YourStopWatch
     {
         public string Id { get; set; }
         public string Name { get; set; }
-
-        //Personnal Settings
-        public int MaxHour { get; set; }
-        public int MaxHourWeekly { get; set; }
-        public int BitmapLength { get; set; }
-        public bool ShowAverageHour { get; set; }
-        public bool ShowCircle { get; set; }
-        public bool AreSettingsUnlock { get; set; }
     }
+
     public class RegisteredTime
     {
         public string Id { get; set; }
