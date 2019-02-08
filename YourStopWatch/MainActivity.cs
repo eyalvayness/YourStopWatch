@@ -23,6 +23,7 @@ using Android.Gms.Common;
 using Android.Runtime;
 using Xamarin.Auth;
 using System.Threading.Tasks;
+using Android.Support.V4.Widget;
 
 namespace YourStopWatch
 {
@@ -45,7 +46,7 @@ namespace YourStopWatch
         readonly Dictionary<string, GraphicTimeLine> spinnerPossibilities = new Dictionary<string, GraphicTimeLine> { { "This Week", GraphicTimeLine.ThisWeek }, { "Last Week", GraphicTimeLine.LastWeek }, { "This Month", GraphicTimeLine.ThisMonth }, /*{ "Month", GraphicTimeLine.Month },*/ { "This Year", GraphicTimeLine.ThisYear } };
         readonly Dictionary<GraphicTimeLine, int> subDivPerTimeLine = new Dictionary<GraphicTimeLine, int> { { GraphicTimeLine.ThisWeek, 7 }, { GraphicTimeLine.LastWeek, 7 }, { GraphicTimeLine.ThisMonth, 4 }, { GraphicTimeLine.ThisYear, 12 } };
         readonly static string dbFolder = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), dbPath = System.IO.Path.Combine(dbFolder, dbName);
-        bool showCircle = true, areSettingsUnlocked = true, showAverageHour = true, OnCreated = true;
+        bool showCircle = true, areSettingsUnlocked = true, showAverageHour = true;
         int milli = 0, sec = 0, min = 0, hour = 0;
         int maxHour = 6, bitmapLength = 600, maxHourWeekly = 14;
         const int maxSec = 60, maxMin = 60;
@@ -84,7 +85,13 @@ namespace YourStopWatch
             base.OnResume();
 
             if (GetAndApplySettings())
-                    UpdateTimerFromAbsoluteReference();
+            {
+                UpdateTimerFromAbsoluteReference();
+                if (timer != null)
+                {
+                    ToggleButtons(ButtonsState.Start);
+                }
+            }
         }
 
         protected override void OnPause()
@@ -101,6 +108,8 @@ namespace YourStopWatch
 
         private void UpdateTimerFromAbsoluteReference()
         {
+            if (timer == null)
+                GetNewTimer();
             timer.Enabled = false;
             DateTime actual = DateTime.Now;
             milli = actual.Millisecond - absoluteRef.Millisecond;
@@ -113,16 +122,16 @@ namespace YourStopWatch
             min += oldTimer.Minute;
             hour += oldTimer.Hour;
 
-            MapTimerValues();
+            int dayOffset = MapTimerValues();
 
-            oldTimer = new DateTime(actual.Year, actual.Month, actual.Day, hour, min, sec, milli);
+            oldTimer = new DateTime(actual.Year, actual.Month, actual.Day + dayOffset, hour, min, sec, milli);
             absoluteRef = actual;
 
             UpdateTimer();
             timer.Enabled = true;
         }
 
-        public void MapTimerValues()
+        public int MapTimerValues()
         {
             while (milli < 0)
             {
@@ -155,6 +164,15 @@ namespace YourStopWatch
                 min -= 60;
                 hour++;
             }
+
+            int day = 0;
+            while (hour < 0)
+            {
+                day++;
+                hour++;
+            }
+
+            return day;
         }
 
         public void GetNewTimer()
@@ -323,6 +341,8 @@ namespace YourStopWatch
         private RelativeLayout ListLayoutSetup()
         {
             RelativeLayout layout = (RelativeLayout)((LayoutInflater)BaseContext.GetSystemService(Context.LayoutInflaterService)).Inflate(Resource.Layout.list_layout, null);
+
+            SwipeRefreshLayout refresher = layout.FindViewById<SwipeRefreshLayout>(Resource.Id.swipeRefresher);
             outputContainer = layout.FindViewById<LinearLayout>(Resource.Id.outputContainer);
             outputContainer.LayoutTransition = new LayoutTransition();
             listButtonsGrid = layout.FindViewById<GridLayout>(Resource.Id.listButtonsGrid);
@@ -330,6 +350,12 @@ namespace YourStopWatch
             Button manualAdd = layout.FindViewById<Button>(Resource.Id.directAdd);
 
             OutputListLayoutReset();
+
+            refresher.Refresh += delegate
+            {
+                OutputListLayoutReset();
+                refresher.Refreshing = false;
+            };
 
             manualAdd.Click += delegate
             {
@@ -392,7 +418,7 @@ namespace YourStopWatch
 
             return layout;
         }
-
+        
         private RelativeLayout GraphicsLayoutSetup()
         {
             RelativeLayout layout = (RelativeLayout)((LayoutInflater)BaseContext.GetSystemService(Context.LayoutInflaterService)).Inflate(Resource.Layout.graphics_layout, null);
@@ -418,7 +444,6 @@ namespace YourStopWatch
             Switch switchBoxShowCircle = layout.FindViewById<Switch>(Resource.Id.show_circle_checkbox);
             Switch switchShowAverage = layout.FindViewById<Switch>(Resource.Id.show_average_hour);
             Switch lockParams = layout.FindViewById<Switch>(Resource.Id.lock_params);
-            
 
             lockParams.Checked = !areSettingsUnlocked;
             radiusSB.Enabled = areSettingsUnlocked;
