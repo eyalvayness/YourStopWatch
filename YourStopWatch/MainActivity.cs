@@ -169,7 +169,7 @@ namespace YourStopWatch
             while (hour < 0)
             {
                 day++;
-                hour++;
+                hour += 24;
             }
 
             return day;
