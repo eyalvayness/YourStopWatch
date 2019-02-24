@@ -112,15 +112,10 @@ namespace YourStopWatch
                 GetNewTimer();
             timer.Enabled = false;
             DateTime actual = DateTime.Now;
-            milli = actual.Millisecond - absoluteRef.Millisecond;
-            sec = actual.Second - absoluteRef.Second;
-            min = actual.Minute - absoluteRef.Minute;
-            hour = actual.Hour - absoluteRef.Hour;
-
-            milli += oldTimer.Millisecond;
-            sec += oldTimer.Second;
-            min += oldTimer.Minute;
-            hour += oldTimer.Hour;
+            milli = actual.Millisecond - absoluteRef.Millisecond + oldTimer.Millisecond;
+            sec = actual.Second - absoluteRef.Second + oldTimer.Second;
+            min = actual.Minute - absoluteRef.Minute + oldTimer.Minute;
+            hour = actual.Hour - absoluteRef.Hour + oldTimer.Hour;
 
             int dayOffset = MapTimerValues();
 
@@ -133,46 +128,79 @@ namespace YourStopWatch
 
         public int MapTimerValues()
         {
-            while (milli < 0)
-            {
-                milli += 1000;
-                sec--;
-            }
-            while (sec < 0)
-            {
-                sec += 60;
-                min--;
-            }
-            while (min < 0)
-            {
-                min += 60;
-                hour--;
-            }
-
-            while (milli >= 1000)
-            {
-                milli -= 1000;
-                sec++;
-            }
-            while (sec >= 60)
-            {
-                sec -= 60;
-                min++;
-            }
-            while (min >= 60)
-            {
-                min -= 60;
-                hour++;
-            }
-
             int day = 0;
-            while (hour < 0)
+
+            while (milli < 0 || milli >= 1000)
             {
-                day++;
-                hour += 24;
+                if (milli < 0)
+                {
+                    milli += 1000;
+                    sec--;
+                }
+                if (milli >= 1000)
+                {
+                    milli -= 1000;
+                    sec++;
+                }
+            }
+            while (sec < 0 || sec >= 60)
+            {
+                if (sec < 0)
+                {
+                    sec += 60;
+                    min--;
+                }
+                if (sec >= 60)
+                {
+                    sec -= 60;
+                    min++;
+                }
+            }
+            while (min < 0 || min >= 60)
+            {
+                if (min < 0)
+                {
+                    min += 60;
+                    hour--;
+                }
+                if (min >= 60)
+                {
+                    min -= 60;
+                    hour++;
+                }
+            }
+
+            while (hour < 0 || hour >= 24)
+            {
+                if (hour < 0)
+                {
+                    day++;
+                    hour += 24;
+                }
+                if (hour >= 24)
+                {
+                    day--;
+                    hour -= 24;
+                }
             }
 
             return day;
+
+            //while (milli >= 1000)
+            //{
+            //    milli -= 1000;
+            //    sec++;
+            //}
+            //while (sec >= 60)
+            //{
+            //    sec -= 60;
+            //    min++;
+            //}
+            //while (min >= 60)
+            //{
+            //    min -= 60;
+            //    hour++;
+            //}
         }
 
         public void GetNewTimer()
