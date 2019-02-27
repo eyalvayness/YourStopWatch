@@ -42,6 +42,7 @@ namespace YourStopWatch
         Timer timer;
         View addedView = null;
         TextView timerView;
+        SQLiteConnection registeredTimesDB;
         const string dbName = "SavedTimesDataBase.db3", settingsName = "AppSettings";
         readonly Dictionary<string, GraphicTimeLine> spinnerPossibilities = new Dictionary<string, GraphicTimeLine> { { "This Week", GraphicTimeLine.ThisWeek }, { "Last Week", GraphicTimeLine.LastWeek }, { "This Month", GraphicTimeLine.ThisMonth }, /*{ "Month", GraphicTimeLine.Month },*/ { "This Year", GraphicTimeLine.ThisYear } };
         readonly Dictionary<GraphicTimeLine, int> subDivPerTimeLine = new Dictionary<GraphicTimeLine, int> { { GraphicTimeLine.ThisWeek, 7 }, { GraphicTimeLine.LastWeek, 7 }, { GraphicTimeLine.ThisMonth, 4 }, { GraphicTimeLine.ThisYear, 12 } };
@@ -52,8 +53,8 @@ namespace YourStopWatch
         const int maxSec = 60, maxMin = 60;
         float secOffset, minOffset, hourOffset;
 
-        MobileServiceClient client = new MobileServiceClient("https://yourstopwatchapp.azurewebsites.net");
-        StopwatchUser currentUser = null;
+        //MobileServiceClient client = new MobileServiceClient("https://yourstopwatchapp.azurewebsites.net");
+        //StopwatchUser currentUser = null;
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
@@ -66,9 +67,11 @@ namespace YourStopWatch
             navigation = FindViewById<BottomNavigationView>(Resource.Id.bottomNavigation);
             navigation.SetOnNavigationItemSelectedListener(this);
 
-            CurrentPlatform.Init();
+            /*CurrentPlatform.Init();
+            GetAndApplyUser();*/
+            registeredTimesDB = new SQLiteConnection(dbPath);
+            registeredTimesDB.CreateTable<Time>();
             GetAndApplySettings();
-            GetAndApplyUser();
 
             stopwatchLayout = StopWatchLayoutSetup();
             listLayout = ListLayoutSetup();
@@ -97,13 +100,13 @@ namespace YourStopWatch
         protected override void OnPause()
         {
             base.OnPause();
-            SaveUserAndSettings(true);
+            SaveUserSettings(true);
         }
 
         protected override void OnDestroy()
         {
             base.OnDestroy();
-            SaveUserAndSettings(false);
+            SaveUserSettings(false);
         }
 
         private void UpdateTimerFromAbsoluteReference()
@@ -244,7 +247,7 @@ namespace YourStopWatch
             return wasTimerRunning;
         }
 
-        private async void GetAndApplyUser()
+        /*private async void GetAndApplyUser()
         {
             var settings = Application.Context.GetSharedPreferences(settingsName, FileCreationMode.Private);
             string userId = settings.GetString("userId", null);
@@ -304,17 +307,16 @@ namespace YourStopWatch
                 alert2.Create().Show();
             });
             alert.Create().Show();
-        }
+        }*/
 
-        private void SaveUserAndSettings(bool keepActivity)
+        private void SaveUserSettings(bool keepActivity)
         {
             var settings = Application.Context.GetSharedPreferences(settingsName, FileCreationMode.Private).Edit();
             settings.PutInt("timerMillisenconds", milli);
             settings.PutInt("timerSeconds", sec);
             settings.PutInt("timerMinutes", min);
             settings.PutInt("timerHours", hour);
-            settings.PutString("userId", currentUser?.Id);
-
+            //settings.PutString("userId", currentUser?.Id);
 
             settings.PutInt("bitmapLength", bitmapLength);
             settings.PutInt("maxHour", maxHour);
@@ -400,17 +402,18 @@ namespace YourStopWatch
                     timePicker.Minute = 0;
                     timeBuilder.SetView(timePicker);
                     timeBuilder.SetNegativeButton("Cancel", delegate { return; });
-                    timeBuilder.SetPositiveButton("Save Time", async delegate
+                    timeBuilder.SetPositiveButton("Save Time", /*async*/ delegate
                     {
-                        //Time t = new Time { SavedTime = new DateTime(datePicker.Year, datePicker.Month + 1, datePicker.DayOfMonth, timePicker.Hour, timePicker.Minute, 0) };
-                        //var db = new SQLiteConnection(dbPath);
-                        //db.CreateTable<Time>();
-                        //db.Insert(t);
-                        //db.Close();
-                        if (currentUser == null)
+                        Time t = new Time
+                        {
+                            SavedTime = new DateTime(datePicker.Year, datePicker.Month + 1, datePicker.DayOfMonth, timePicker.Hour, timePicker.Minute, 0),
+                            CreatedTime = DateTime.Now
+                        };
+                        registeredTimesDB.Insert(t);
+                        /*if (currentUser == null)
                             return;
                         RegisteredTime t = new RegisteredTime { SavedTime = new DateTime(datePicker.Year, datePicker.Month + 1, datePicker.DayOfMonth, timePicker.Hour, timePicker.Minute, 0), TimeUserId = currentUser.Id, createdAt = DateTime.Now};
-                        await client.GetTable<RegisteredTime>().InsertAsync(t);
+                        await client.GetTable<RegisteredTime>().InsertAsync(t);*/
 
                         OutputListLayoutReset();
                     });
@@ -423,19 +426,18 @@ namespace YourStopWatch
             {
                 var alert = new Android.Support.V7.App.AlertDialog.Builder(this);
                 alert.SetTitle("Confirmation");
-                alert.SetMessage("Do you really want to permanently delete all of the recorded times ?");
+                alert.SetMessage("Do you really want to permanently delete ALL of the recorded times ? This action is not recoverable.");
 
-                alert.SetPositiveButton("YES", async delegate
+                alert.SetPositiveButton("YES", /*async */delegate
                 {
-                    //var db = new SQLiteConnection(dbPath);
-                    //db.CreateTable<Time>();
-                    //db.DropTable<Time>();
-                    if (currentUser == null)
+                    registeredTimesDB.DropTable<Time>();
+                    registeredTimesDB.CreateTable<Time>();
+                    /*if (currentUser == null)
                         return;
                     var table = await client.GetTable<RegisteredTime>().Where(t => t.TimeUserId == currentUser.Id).ToEnumerableAsync();
 
                     foreach (RegisteredTime t in table)
-                        await client.GetTable<RegisteredTime>().DeleteAsync(t);
+                        await client.GetTable<RegisteredTime>().DeleteAsync(t);*/
                     outputContainer.RemoveAllViews();
                     outputContainer.AddView(listButtonsGrid);
                     resetAllButton.Enabled = false;
@@ -472,22 +474,7 @@ namespace YourStopWatch
             Switch switchBoxShowCircle = layout.FindViewById<Switch>(Resource.Id.show_circle_checkbox);
             Switch switchShowAverage = layout.FindViewById<Switch>(Resource.Id.show_average_hour);
             Switch lockParams = layout.FindViewById<Switch>(Resource.Id.lock_params);
-
-            lockParams.Checked = !areSettingsUnlocked;
-            radiusSB.Enabled = areSettingsUnlocked;
-            switchBoxShowCircle.Enabled = areSettingsUnlocked;
-            maxHourPicker.Enabled = areSettingsUnlocked;
-            maxWeeklyEdit.Enabled = areSettingsUnlocked;
-            loginButton.Enabled = areSettingsUnlocked;
-            switchShowAverage.Enabled = areSettingsUnlocked;
                 
-            switchShowAverage.Checked = showAverageHour;
-            maxWeeklyEdit.Text = maxHourWeekly.ToString();
-            maxHourPicker.Value = maxHour;
-            radiusSB.SetProgress(bitmapLength, true);
-            radiusSBValue.Text = radiusSB.Progress.ToString() + "px";
-            switchBoxShowCircle.Checked = showCircle;
-            
             lockParams.CheckedChange += delegate
             {
                 loginButton.Enabled = areSettingsUnlocked;
@@ -501,15 +488,18 @@ namespace YourStopWatch
 
             loginButton.Click += delegate
             {
-                SignOrLogInStopwatchUser(true);
+                //SignOrLogInStopwatchUser(true);
                 loginButton.Text = "Change";
             };
 
+
+            switchShowAverage.Checked = showAverageHour;
             switchShowAverage.CheckedChange += delegate
             {
                 showAverageHour = switchShowAverage.Checked;
             };
 
+            maxWeeklyEdit.Text = maxHourWeekly.ToString();
             maxWeeklyEdit.TextChanged += delegate 
             {
                 try
@@ -524,11 +514,14 @@ namespace YourStopWatch
 
             maxHourPicker.MinValue = 1;
             maxHourPicker.MaxValue = 8;
+            maxHourPicker.Value = maxHour;
             maxHourPicker.ValueChanged += delegate
             {
                 maxHour = maxHourPicker.Value;
             };
 
+            radiusSB.SetProgress(bitmapLength, true);
+            radiusSBValue.Text = radiusSB.Progress.ToString() + "px";
             radiusSB.ProgressChanged += delegate
             {
                 radiusSBValue.Text = radiusSB.Progress.ToString() + "px";
@@ -540,10 +533,19 @@ namespace YourStopWatch
 
             switchBoxShowCircle.TextOff = "Off";
             switchBoxShowCircle.TextOn = "On";
+            switchBoxShowCircle.Checked = showCircle;
             switchBoxShowCircle.CheckedChange += delegate
             {
                 showCircle = switchBoxShowCircle.Checked;
             };
+
+            lockParams.Checked = !areSettingsUnlocked;
+            radiusSB.Enabled = areSettingsUnlocked;
+            switchBoxShowCircle.Enabled = areSettingsUnlocked;
+            maxHourPicker.Enabled = areSettingsUnlocked;
+            maxWeeklyEdit.Enabled = areSettingsUnlocked;
+            loginButton.Enabled = false;//areSettingsUnlocked;
+            switchShowAverage.Enabled = areSettingsUnlocked;
 
             return layout;
         }
@@ -621,91 +623,86 @@ namespace YourStopWatch
             ColumnSeries subDivSeries = new ColumnSeries { FillColor = OxyColors.Green, StrokeColor = OxyColors.Green };
             ColumnSeries todaySeries = new ColumnSeries { FillColor = OxyColors.Orange, StrokeColor = OxyColors.Orange };
 
-            //var db = new SQLiteConnection(dbPath);
-            //db.CreateTable<Time>();
-            //var table = db.Table<Time>();
-            if (currentUser != null)
+            var table = registeredTimesDB.Table<Time>();
+            //var table = await client.GetTable<RegisteredTime>().Where(t => t.TimeUserId == currentUser.Id).OrderBy(t => t.SavedTime).ToEnumerableAsync();
+
+            if (timeLine == GraphicTimeLine.ThisWeek)
             {
-                var table = await client.GetTable<RegisteredTime>().Where(t => t.TimeUserId == currentUser.Id).OrderBy(t => t.SavedTime).ToEnumerableAsync();
-    
-                if (timeLine == GraphicTimeLine.ThisWeek)
+                foreach (Time t in table)
                 {
-                    foreach (RegisteredTime t in table)
-                    {
-                        if ((t.SavedTime.Year == DateTime.Now.Year || Math.Abs(t.SavedTime.Year - DateTime.Now.Year) == 1) && GetWeekDiference(DateTime.Now, t.SavedTime) == 0)
-                            hourPerSubDiv[GetDayOfWeek(t.SavedTime)] += t.SavedTime.Hour + t.SavedTime.Minute / 60f;
-                    }
-    
-                    for (int i = 0; i < subDiv; i++)
-                    {
-                        if (i == GetDayOfWeek(DateTime.Now))
-                        {
-                            todaySeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
-                            todaySeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
-                        }
-                        else
-                        {
-                            subDivSeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
-                            subDivSeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
-                        }
-                    }
+                    if ((t.SavedTime.Year == DateTime.Now.Year || Math.Abs(t.SavedTime.Year - DateTime.Now.Year) == 1) && GetWeekDiference(DateTime.Now, t.SavedTime) == 0)
+                        hourPerSubDiv[GetDayOfWeek(t.SavedTime)] += t.SavedTime.Hour + t.SavedTime.Minute / 60f;
                 }
-                if (timeLine == GraphicTimeLine.LastWeek)
+
+                for (int i = 0; i < subDiv; i++)
                 {
-                    foreach (RegisteredTime t in table)
+                    if (i == GetDayOfWeek(DateTime.Now))
                     {
-                        if ((t.SavedTime.Year == DateTime.Now.Year || Math.Abs(t.SavedTime.Year - DateTime.Now.Year) == 1) && GetWeekDiference(DateTime.Now.AddDays(-7), t.SavedTime) == 0)
-                            hourPerSubDiv[GetDayOfWeek(t.SavedTime)] += t.SavedTime.Hour + t.SavedTime.Minute / 60f;
+                        todaySeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
+                        todaySeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
                     }
-    
-                    for (int i = 0; i < subDiv; i++)
+                    else
                     {
                         subDivSeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
                         subDivSeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
                     }
                 }
-                else if (timeLine == GraphicTimeLine.ThisMonth)
+            }
+            if (timeLine == GraphicTimeLine.LastWeek)
+            {
+                foreach (Time t in table)
                 {
-                    foreach (RegisteredTime t in table)
+                    if ((t.SavedTime.Year == DateTime.Now.Year || Math.Abs(t.SavedTime.Year - DateTime.Now.Year) == 1) && GetWeekDiference(DateTime.Now.AddDays(-7), t.SavedTime) == 0)
+                        hourPerSubDiv[GetDayOfWeek(t.SavedTime)] += t.SavedTime.Hour + t.SavedTime.Minute / 60f;
+                }
+
+                for (int i = 0; i < subDiv; i++)
+                {
+                    subDivSeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
+                    subDivSeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
+                }
+            }
+            else if (timeLine == GraphicTimeLine.ThisMonth)
+            {
+                foreach (Time t in table)
+                {
+                    if ((t.SavedTime.Year == DateTime.Now.Year || Math.Abs(t.SavedTime.Year - DateTime.Now.Year) == 1) && GetWeekDiference(DateTime.Now, t.SavedTime) < 4)
+                        hourPerSubDiv[3 - GetWeekDiference(DateTime.Now, t.SavedTime)] += t.SavedTime.Hour + t.SavedTime.Minute / 60f;
+                }
+
+                for (int i = 0; i < subDiv; i++)
+                {
+                    if (i + 1 == subDiv)
                     {
-                        if ((t.SavedTime.Year == DateTime.Now.Year || Math.Abs(t.SavedTime.Year - DateTime.Now.Year) == 1) && GetWeekDiference(DateTime.Now, t.SavedTime) < 4)
-                            hourPerSubDiv[3 - GetWeekDiference(DateTime.Now, t.SavedTime)] += t.SavedTime.Hour + t.SavedTime.Minute / 60f;
+                        todaySeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
+                        todaySeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
                     }
-    
-                    for (int i = 0; i < subDiv; i++)
+                    else
                     {
-                        if (i + 1 == subDiv)
-                        {
-                            todaySeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
-                            todaySeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
-                        }
-                        else
-                        {
-                            subDivSeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
-                            subDivSeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
-                        }
+                        subDivSeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
+                        subDivSeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
                     }
                 }
-                else if (timeLine == GraphicTimeLine.ThisYear)
+            }
+            else if (timeLine == GraphicTimeLine.ThisYear)
+            {
+                foreach (Time t in table)
                 {
-                    foreach (RegisteredTime t in table)
+                    if (t.SavedTime.Year == DateTime.Now.Year)
+                        hourPerSubDiv[t.SavedTime.Month - 1] += t.SavedTime.Hour + t.SavedTime.Minute / 60f;
+                }
+
+                for (int i = 0; i < subDiv; i++)
+                {
+                    if (i + 1 == DateTime.Now.Month)
                     {
-                        if (t.SavedTime.Year == DateTime.Now.Year)
-                            hourPerSubDiv[t.SavedTime.Month - 1] += t.SavedTime.Hour + t.SavedTime.Minute / 60f;
+                        todaySeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
+                        todaySeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
                     }
-    
-                    for (int i = 0; i < subDiv; i++)
+                    else
                     {
-                        if (i + 1 == DateTime.Now.Month)
-                        {
-                            todaySeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
-                            todaySeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
-                        }
-                        else
-                        {
-                            subDivSeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
-                            subDivSeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
-                        }
+                        subDivSeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
+                        subDivSeries.Items.Add(new ColumnItem(hourPerSubDiv[i], i));
                     }
                 }
             }
@@ -731,11 +728,11 @@ namespace YourStopWatch
         {
             CommonPageOutput(settingsLayout);
             
-            if (currentUser != null && currentUser.Name != null)
+            /*if (currentUser != null && currentUser.Name != null)
             {
                 FindViewById<TextView>(Resource.Id.setting_account).Text = $"You are logged in as \"{currentUser.Name}\"";
                 FindViewById<Button>(Resource.Id.loginButton).Text = "Change";
-            }
+            }*/
         }
 
         private int GetWeekDiference(DateTime actual, DateTime other)
@@ -832,41 +829,34 @@ namespace YourStopWatch
                 }
             };
 
-            stopButton.Click += async delegate
+            stopButton.Click += delegate
             {
                 ToggleButtons(ButtonsState.End);
-                if (currentUser != null)
-                {
-                    RegisteredTime t = new RegisteredTime { SavedTime = ExtractTimerSpan(), TimeUserId = currentUser.Id, createdAt = DateTime.Now };
-                    //var db = new SQLiteConnection(dbPath);
-                    //db.CreateTable<Time>();
-                    //db.Insert(item);
-                    //db.Close();
-                    await client.GetTable<RegisteredTime>().InsertAsync(t);
-                }
-                else
-                    ExtractTimerSpan();
+                Time t = new Time { SavedTime = ExtractTimerSpan(), CreatedTime = DateTime.Now };
+                registeredTimesDB.Insert(t);
+
+                //RegisteredTime t = new RegisteredTime { SavedTime = ExtractTimerSpan(), TimeUserId = currentUser.Id, createdAt = DateTime.Now };
+                //await client.GetTable<RegisteredTime>().InsertAsync(t);
 
                 OutputListLayoutReset();
                 UpdateClock();
             };
         }
 
-        private async void OutputListLayoutReset()
+        private void OutputListLayoutReset()
         {
-            //var db = new SQLiteConnection(dbPath);
-            //db.CreateTable<Time>();
             //var table = db.Table<Time>().OrderBy(t => t.SavedTime);
-            if (currentUser == null)
+            /*if (currentUser == null)
                 return;
-            var table = await client.GetTable<RegisteredTime>().Where(t => t.TimeUserId == currentUser.Id).OrderBy(t => t.SavedTime).ThenBy(t => t.createdAt).ToEnumerableAsync();
+            var table = await client.GetTable<RegisteredTime>().Where(t => t.TimeUserId == currentUser.Id).OrderBy(t => t.SavedTime).ThenBy(t => t.createdAt).ToEnumerableAsync();*/
+            var table = registeredTimesDB.Table<Time>().OrderByDescending(t => t.SavedTime).ThenByDescending(t => t.CreatedTime).ToList();
             outputContainer.RemoveAllViews();
             outputContainer.AddView(listButtonsGrid);
 
-            foreach (var t in table)
+            foreach (Time t in table)
             {
                 if (Math.Abs(DateTime.Now.DayOfYear - t.SavedTime.DayOfYear + 365 * (DateTime.Now.Year - t.SavedTime.Year)) < 14)
-                    AddTimeToOutputList(t/*, new SQLiteConnection(dbPath)*/);
+                    AddTimeToOutputList(t);
             }
             if (outputContainer.ChildCount == 1)
                 listButtonsGrid.FindViewById<Button>(Resource.Id.resetAllButton).Enabled = false;
@@ -875,7 +865,7 @@ namespace YourStopWatch
             //db.Close();
         }
 
-        private void AddTimeToOutputList(RegisteredTime t/*, SQLiteConnection db*/)
+        private void AddTimeToOutputList(Time t)
         {
             LayoutInflater inflater = (LayoutInflater)BaseContext.GetSystemService(Context.LayoutInflaterService);
             View timeView = inflater.Inflate(Resource.Layout.single_output_layout, null);
@@ -891,12 +881,11 @@ namespace YourStopWatch
                 alert.SetTitle("Confirmation");
                 alert.SetMessage("Do you really want to permanently delete this recorded time ?");
 
-                alert.SetPositiveButton("YES", async delegate
+                alert.SetPositiveButton("YES", delegate
                 {
                     outputContainer.RemoveView(timeView);
-                    await client.GetTable<RegisteredTime>().DeleteAsync(t);
-                    //db.Delete<Time>(t.Id);
-                    //db.Close();
+                    //await client.GetTable<RegisteredTime>().DeleteAsync(t);
+                    registeredTimesDB.Delete<Time>(t.Id);
                     Toast.MakeText(this, $"The {t.SavedTime.ToLongTimeString()} of {t.SavedTime.ToShortDateString()} has been deleted.", ToastLength.Long).Show();
                 });
                 alert.SetNegativeButton("NO", delegate { return; });
@@ -912,10 +901,10 @@ namespace YourStopWatch
             min = 0;
             sec = 0;
             milli = 0;
-            UpdateClock();
             timer.Enabled = false;
             timer.Dispose();
             timer = null;
+            UpdateClock();
             return time;
         }
 
@@ -1024,7 +1013,7 @@ namespace YourStopWatch
         Pause
     }
 
-    public class StopwatchUser
+    /*public class StopwatchUser
     {
         public string Id { get; set; }
         public string Name { get; set; }
@@ -1036,9 +1025,9 @@ namespace YourStopWatch
         public DateTime SavedTime { get; set; }
         public DateTime createdAt { get; set; }
         public string TimeUserId { get; set; }
-    }
+    }*/
 
-    /*[Table("Times")]
+    [Table("Times")]
     public class Time : INotifyPropertyChanged
     {
         private int _id;
@@ -1056,11 +1045,18 @@ namespace YourStopWatch
             set { this._savedTime = value; OnPropertyChanged(nameof(_savedTime)); }
         }
 
+        private DateTime _createdTime;
+        public DateTime CreatedTime
+        {
+            get { return _createdTime; }
+            set { this._createdTime = value; OnPropertyChanged(nameof(_savedTime)); }
+        }
+
         public event PropertyChangedEventHandler PropertyChanged;
         private void OnPropertyChanged(string propertyName)
         {
             this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
-    }*/
+    }
 }
 
